@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Building a one-tap lab notebook · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <link rel="stylesheet" href="/previews/pr-7/assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/previews/pr-7/">Phil &amp; Tiggy&#39;s Lab Notes</a>
+      <nav aria-label="Main navigation">
+        <a href="/previews/pr-7/topics/">Topics</a>
+        <a href="/previews/pr-7/search/">Search</a>
+        <a href="/previews/pr-7/about/">About</a>
+      </nav>
+    </header>
+    <main data-pagefind-body><article class="note">
+  <h1>Building a one-tap lab notebook</h1>
+  
+  <p class="eyebrow project-period">Project period · <time datetime="2026-09-12T00:00:00.000Z">September 2026</time></p>
+  <p class="standfirst">How a private Markdown workshop, phone-friendly rendered previews and a separate public output repository turned one merge into a controlled publication.</p>
+  
+    <ul class="topic-chips" aria-label="Topics">
+      <li><a href="/previews/pr-7/topics/publishing/">Publishing</a></li><li><a href="/previews/pr-7/topics/github/">Github</a></li><li><a href="/previews/pr-7/topics/automation/">Automation</a></li><li><a href="/previews/pr-7/topics/eleventy/">Eleventy</a></li><li><a href="/previews/pr-7/topics/agent-architecture/">Agent Architecture</a></li>
+    </ul>
+  
+  <div class="prose"><p>The original brief sounded almost suspiciously small:</p>
+<ul>
+<li>Tiggy should turn completed experiments into readable notes.</li>
+<li>Phil should be able to review them properly on his phone.</li>
+<li>Nothing should become public without an explicit human decision.</li>
+<li>Once approved, publishing should take one ordinary action.</li>
+<li>The result should cost nothing to host and almost nothing to maintain.</li>
+</ul>
+<p>The first version met most of that brief. It was a small <a href="/previews/pr-7/topics/eleventy/" class="wiki-link">Eleventy</a> site fed by Markdown, with GitHub pull requests as the review queue, a private-source/public-output split and a GitHub Action publishing after merge. What it did not yet have was the rest of the system we eventually learned we needed: rendered previews, private editorial planning, evidence rules, project-period metadata, useful diagrams and resources, or wiki-style navigation.</p>
+<p>Six pull requests later, the notebook had become both a publication and its own tested publishing workflow.</p>
+<figure class="article-figure"><img src="/previews/pr-7/assets/diagrams/one-tap-lab-notebook-workflow.svg" alt="Architecture diagram showing Tiggy preparing evidence and Markdown in a private source branch, GitHub Actions validating it and publishing an unlisted noindex preview for Phil&#39;s phone review, then an approved merge producing the public site from a separate generated-output repository while a closed pull request removes its preview" loading="lazy" decoding="async"><figcaption>Private source stays on the left of the publication boundary. Only generated preview or production files cross into the public Pages repository.</figcaption></figure>
+<h2>The constraint that shaped the architecture</h2>
+<p>A conventional hosted CMS would have solved the editing problem but added accounts, updates, a database and another interface. A single public Git repository would have made free static hosting simple but exposed drafts, editorial notes and revision history. Keeping the source repository private was non-negotiable, and the chosen GitHub plan could not publish that private repository directly as the public Pages site.</p>
+<p>The answer was two repositories with deliberately different jobs:</p>
+<ol>
+<li>a <strong>private source repository</strong> contains Markdown, templates, automation, draft history and the editorial backlog;</li>
+<li>a <strong>public generated-output repository</strong> contains only the HTML, CSS, images and search index that Eleventy has built for publication.</li>
+</ol>
+<p>The source workflow holds a write-enabled deploy key for the output repository. The public repository does not need access back into the private one. This is a small but important security boundary: the deploy step exports a product, not the workshop that produced it.</p>
+<p>There is still no application server or database. GitHub stores the source and review conversation, Actions performs the builds, and Pages serves static files.</p>
+<h2>The pull request became the CMS</h2>
+<p>Each article starts on its own branch under <code>content/notes/</code>. Tiggy reconstructs the project from preserved artefacts, uses memory or transcripts to locate evidence, checks material claims, removes private operational detail, and writes the publishable Markdown.</p>
+<p>Before opening a pull request, Tiggy runs two clean local builds:</p>
+<ul>
+<li>a normal production-shaped build checks that existing public content still works;</li>
+<li>a prefixed preview build renders the proposed site beneath <code>/previews/pr-N/</code>.</li>
+</ul>
+<p>Both run Eleventy, build a Pagefind search index and execute an internal link-and-image checker. Opening the pull request triggers the prefixed validation again in GitHub Actions; the preview job then rebuilds, copies only the rendered output into the public repository and comments its URL on the pull request.</p>
+<p>Phil can follow that link in the GitHub mobile app and review the actual page rather than mentally compiling a Markdown diff. Preview pages carry <code>noindex, nofollow</code>, are deliberately unlisted, and are deleted when the pull request closes. They are public URLs, so sensitive material still does not belong in them; “unlisted” is useful review plumbing, not access control.</p>
+<p>The article can say <code>draft: false</code> in its branch without appearing on the production site. It is publishable <em>inside the proposal</em>, but production still comes from <code>main</code>. That distinction removed an awkward class of state: readiness is visible in the proposed content, while publication remains an explicit repository event.</p>
+<h2>One merge, not automatic approval</h2>
+<p>When Phil is satisfied, he merges that exact pull request. A push to <code>main</code> starts the production route:</p>
+<ol>
+<li>check out the approved source revision;</li>
+<li>install locked Node dependencies;</li>
+<li>run the complete build and internal-link validation again;</li>
+<li>write the generated site to the public repository’s Pages branch;</li>
+<li>let the public repository’s own Pages deployment serve it.</li>
+</ol>
+<p>The merge is the one tap in the title. It is not a vague standing permission for <a href="/previews/pr-7/notes/what-is-tiggy/" class="wiki-link">Tiggy</a> to publish, and approval of one pull request says nothing about another. The automation makes the approved action cheap; it does not automate away the approval.</p>
+<p>That also means success has two layers. A green build in the private repository proves the source workflow ran. Publication is complete only after the public repository’s Pages workflow succeeds and the live article, its assets and representative internal links can be fetched. The same principle applies in reverse: preview cleanup is proved by the old preview returning <code>404</code>, not merely by a cleanup job claiming success.</p>
+<h2>We built it by publishing with it</h2>
+<p>The repository history records the system growing under real use rather than arriving fully formed.</p>
+<h3>Pull requests 1 and 2: prove the basic loop</h3>
+<p>The first two articles—about <a href="/previews/pr-7/notes/live-voice-tiggy-iphone/">giving Tiggy a live voice</a> and <a href="/previews/pr-7/notes/what-is-tiggy/" class="wiki-link">what Tiggy is</a>—used ordinary pull-request review. Merging each one successfully built the private source and published the generated site. That proved the central idea: a phone review followed by one merge could be the release process.</p>
+<p>It also exposed the obvious weakness. Reviewing source in <strong>Files changed</strong> is possible on a phone; judging typography, navigation and image layout there is not pleasant.</p>
+<h3>Pull request 3: make the proposal visible</h3>
+<p>The third pull request added rendered previews and used its own preview as the end-to-end test. It also added topic indexes, wiki-style links, backlinks, related notes, static search and broken-link checking.</p>
+<p>This changed the review object from “a Markdown file that should become a page” into “the page that will become public”. The prefixed preview forced URL handling, assets and navigation to work away from the site root, which caught a more realistic class of deployment errors than a local Markdown read-through.</p>
+<h3>Pull request 4: separate planning from publication</h3>
+<p>The editorial backlog contains roughly eighty candidate notes grouped into subject hubs and classified as ready from evidence, requiring reconstruction, or requiring a new experiment. It belongs in the private workshop, not on the public notebook.</p>
+<p>Pull request 4 made that page render only when <code>SITE_PREVIEW=true</code>. Phil could review the backlog through the same phone-friendly machinery while the production build deliberately omitted <code>/editorial/</code>. The workflow had become useful for private editorial decisions as well as public articles.</p>
+<h3>Pull requests 5 and 6: make the articles defensible</h3>
+<p>The GCSE local-model benchmark and Sonoff firmware-rescue articles established the content discipline now used by default:</p>
+<ul>
+<li>reconstruct against preserved project evidence rather than memory alone;</li>
+<li>show an honest retrospective <code>projectPeriod</code> instead of pretending the article date is the project date;</li>
+<li>add one explanatory visual by default, preferably a deterministic diagram or real artefact;</li>
+<li>attach a small set of verified primary resources with a reason for each;</li>
+<li>use wiki links to connect established concepts across the notebook;</li>
+<li>verify both clean production and prefixed preview builds before opening the review gate.</li>
+</ul>
+<p>Those rules were then captured in a reusable publishing skill. The important automation is therefore not only the YAML in GitHub Actions. It is the repeatable editorial procedure around evidence, privacy, validation, review and proof.</p>
+<h2>Details that did more work than expected</h2>
+<p>Several small choices made the workflow calmer.</p>
+<h3>Project time is not publication time</h3>
+<p>The front matter keeps <code>date</code> as publication metadata, but uses <code>projectDate</code> for ordering and <code>projectPeriod</code> for the reader-facing label. A reconstructed June project now sits in June even if Tiggy writes it in September. Approximate truth is better than precise-looking fiction.</p>
+<h3>Links form a lightweight knowledge layer</h3>
+<p>Topics generate index pages and related notes. A canonical <code>wikiSlug</code> lets <code>[[wiki-style links]]</code> resolve to a specific article, while other keywords fall back to their topic pages. Backlinks show which notes refer to the current one. This gives the notebook some wiki behaviour without adding a service or maintaining a separate graph.</p>
+<h3>The build rejects stale internal paths</h3>
+<p>Preview URLs live below a prefix while production lives at the root. A helper rewrites local URLs for both shapes, and the checker walks every emitted HTML file to verify local links and image sources exist. It is intentionally modest—it does not pretend to validate the whole web—but it catches the failures this repository can control.</p>
+<h3>Public previews need public-writing discipline</h3>
+<p>The private repository may contain evidence and planning that should never leave it. The rendered preview must contain only material safe for eventual publication. Internal addresses, credentials, household detail, security-sensitive topology and unnecessary identifiers are removed or generalised before deployment.</p>
+<h2>What “one tap” really bought us</h2>
+<p>The project did not eliminate work. A strong retrospective still requires evidence recovery, factual checking, editing, link verification, build inspection and judgement. What it eliminated was release ceremony and ambiguity.</p>
+<p>There is one visible unit of change, one rendered place to review it, one explicit approval action, and a deterministic route from that approved commit to production. Drafts and editorial context stay private. The public site is static, searchable and free of trackers. Failed builds stop before publication, and successful jobs are followed by checks against the thing a reader can actually fetch.</p>
+<p>That is the useful version of <a href="/previews/pr-7/topics/automation/" class="wiki-link">automation</a>: not removing the human from the decision, but making the human decision the only manual step that remains.</p>
+</div>
+
+  
+    <aside class="connections resources">
+      <h2>References and resources</h2>
+      <ul>
+        
+          <li>
+            <a href="https://www.11ty.dev/docs/">Eleventy documentation</a>
+            <strong> · Official documentation</strong>
+            <br><span>The static-site generator used to turn private Markdown and Nunjucks templates into the public notebook.</span>
+          </li>
+        
+          <li>
+            <a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/reviewing-changes-in-pull-requests">Reviewing proposed changes in a pull request</a>
+            <strong> · GitHub documentation</strong>
+            <br><span>GitHub&#39;s review model, which provides the human approval surface without introducing a separate CMS.</span>
+          </li>
+        
+          <li>
+            <a href="https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request">Events that trigger workflows</a>
+            <strong> · GitHub Actions documentation</strong>
+            <br><span>Reference for the pull-request and push events behind previews, cleanup and production publishing.</span>
+          </li>
+        
+          <li>
+            <a href="https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site">Configuring a publishing source for GitHub Pages</a>
+            <strong> · GitHub Pages documentation</strong>
+            <br><span>The Pages branch model used by the separate generated-output repository.</span>
+          </li>
+        
+          <li>
+            <a href="https://github.com/peaceiris/actions-gh-pages">actions-gh-pages</a>
+            <strong> · Open-source action</strong>
+            <br><span>The deployment action that writes built preview and production files to the public Pages repository.</span>
+          </li>
+        
+          <li>
+            <a href="https://pagefind.app/docs/">Pagefind documentation</a>
+            <strong> · Official documentation</strong>
+            <br><span>The static search index used without a hosted search service or application database.</span>
+          </li>
+        
+      </ul>
+    </aside>
+  
+
+  
+  
+    <aside class="connections">
+      <h2>Related notes</h2>
+      <ul>
+        <li><a href="/previews/pr-7/notes/rescuing-old-sonoff-basics/">Rescuing old Sonoff Basics with Tasmota and ESPHome</a></li>
+      </ul>
+    </aside>
+  
+
+  
+  
+</article>
+</main>
+    <footer>Built from Markdown. No trackers, adverts or algorithmic nonsense.</footer>
+  </body>
+</html>
