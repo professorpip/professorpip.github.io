@@ -27,139 +27,109 @@
       <li><a href="/topics/local-ai/">Local AI</a></li><li><a href="/topics/benchmarking/">Benchmarking</a></li><li><a href="/topics/evaluation/">Evaluation</a></li><li><a href="/topics/ryzen/">Ryzen</a></li>
     </ul>
   
-  <div class="prose"><p>We had reached the dangerous stage of local-model testing: several models seemed clever, benchmarks on the internet said impressive things, and short prompts produced encouraging answers. None of that told us whether a model running on our own hardware could sustain useful reasoning across a long, mixed body of work.</p>
-<p>So we sent it back to school.</p>
-<p>More precisely, we built a benchmark from British GCSE exam material: the qualifications normally taken at 15 or 16. The eventual test covered more than a thousand available marks across science, maths, computing, humanities, business, languages and English writing.</p>
-<p>The interesting result was not a pretend school grade. It was a much clearer picture of what local models could and could not do—and a reusable way to compare the next one.</p>
+  <div class="prose"><h2>In brief</h2>
+<ul>
+<li>We built a GCSE-based benchmark to test quantised local models on a stable, mixed workload—not to award pretend grades.</li>
+<li>A 97.6% pilot was misleading because it selected text-friendly questions.</li>
+<li>Text-only testing scored <strong>313/361 (86.7%)</strong> but covered only 72.5% of available marks; vision raised coverage to 100% with common-question performance unchanged.</li>
+<li>The frozen expanded baseline scored <strong>893/1,019 (87.6%)</strong> across 14 components; Maths, fine visual reading and exam technique exposed the clearest weaknesses.</li>
+<li>Flash Next led the text-only comparison at <strong>340/361</strong>, but speed and agent reliability remained separate deployment decisions.</li>
+</ul>
+<p>Short prompts made several local models look clever. We wanted to know whether a quantised model on a 16 GB consumer GPU could sustain useful reasoning across official British GCSE questions.</p>
+<p>This is an <a href="/topics/evaluation/" class="wiki-link">evaluation</a> benchmark, not a claim that an AI “passed its GCSEs”. Components were partial, some marks subjective, public papers may have appeared in training data, and speaking or practical assessment was absent.</p>
 <figure class="article-figure"><img src="/assets/diagrams/gcse-benchmark-evolution.svg" alt="Timeline showing the benchmark growing from an 84-mark text-friendly pilot through text-only, multimodal and exam-permitted-aid versions to a frozen 1,019-mark baseline" loading="lazy" decoding="async"><figcaption>The score barely moved after vision arrived; coverage and experimental discipline changed dramatically.</figcaption></figure>
-<h2>What we actually wanted to measure</h2>
-<p>Our practical question was:</p>
-<blockquote>
-<p>If a quantised model running on a 16 GB consumer GPU attempted real GCSE questions under controlled conditions, what capability profile would emerge?</p>
-</blockquote>
-<p>That wording matters. This was never a claim that an AI had “passed its GCSEs”. A qualification combines complete papers, prescribed conditions, official grade boundaries and, in some subjects, speaking or practical assessment. Our benchmark uses papers and components as test material, but it does not recreate the qualification.</p>
-<p>It does offer several things that tiny synthetic prompts do not:</p>
-<ul>
-<li>hundreds of marks rather than a handful of anecdotes;</li>
-<li>different kinds of reasoning in one stable test;</li>
-<li>official questions and mark schemes written independently of the model;</li>
-<li>long prompts where attention and instruction-following matter;</li>
-<li>diagrams, graphs, source pages and permitted resources;</li>
-<li>answers that can be frozen and inspected after the fact.</li>
-</ul>
-<p>This became part of our broader <a href="/topics/evaluation/" class="wiki-link">evaluation</a> work: judge a model by the jobs and constraints we care about, not by vibes alone.</p>
-<h2>The suspiciously good pilot</h2>
-<p>The first run used selected text and table questions from Maths, Biology and Computer Science. Our local Dirk/Qwen3.8 27B model scored <strong>82 out of 84</strong>, or <strong>97.6%</strong>.</p>
-<p>That was useful—and obviously too flattering.</p>
-<p>The questions had been selected partly because they survived text extraction cleanly. Images, graphs, geometry, apparatus and extended visual questions were excluded. The subset therefore favoured factual recall and straightforward text reasoning, both model strengths.</p>
-<p>The pilot did prove the machinery:</p>
-<ol>
-<li>obtain official question papers and mark schemes;</li>
-<li>keep the mark schemes away from the answering model;</li>
-<li>turn eligible questions into neutral prompts;</li>
-<li>capture raw answers before marking;</li>
-<li>mark conservatively against official criteria;</li>
-<li>retain the prompts, responses, decisions and hashes.</li>
-</ol>
-<p>It also taught us the first important lesson: <strong>a high score can be evidence that the test is too friendly, not that the model is extraordinary</strong>.</p>
-<h2>Version 1: the naked text model</h2>
-<p>We expanded the test to six AQA papers or components: Higher Maths, Biology, Computer Science, History, Geography and Chemistry.</p>
-<p>The model ran “naked”. It received the question-paper text and a list of eligible question IDs, but no web access, retrieval, calculator, Python, agent loop, mark scheme or answer checking. Its local runtime used a 32K context on an RTX 5060 Ti with 16 GB of VRAM.</p>
-<p>The result was <strong>313/361, or 86.7%</strong>, across questions considered fair for text-only input. Those questions represented <strong>361 of the 498 marks</strong> in the selected components, so coverage was only <strong>72.5%</strong>.</p>
-<p>The subject pattern was more valuable than the average:</p>
-<ul>
-<li>Biology, Chemistry, Geography and Computer Science were very strong.</li>
-<li>History answers were coherent but sometimes insufficiently tied to the exam command or source.</li>
-<li>Higher non-calculator Maths was the clear weakness.</li>
-<li>Some technically reasonable answers still missed marks because the scheme wanted a specific point.</li>
-</ul>
-<p>The model could explain rainforest value and solve chemistry stoichiometry, then confidently mishandle simultaneous equations or simplify a surd into nonsense. “Good at reasoning” was much too coarse a description.</p>
-<h2>Version 2: let it see the paper</h2>
-<p>Text-only testing also confuses model weakness with harness weakness. If a human candidate receives a diagram, giving the model mangled PDF text is not a fair equivalent.</p>
-<p>Version 2 routed visual questions through the model’s native vision path. Nothing else became agentic: there was still no web search, external OCR rescue, calculator, code or mark-scheme access.</p>
-<p>Coverage rose from <strong>361/498 to 498/498</strong>. The score became <strong>436/498, or 87.6%</strong>.</p>
-<p>The crucial controlled comparison was hiding underneath:</p>
-<ul>
-<li>common text questions in v1: <strong>313/361</strong>;</li>
-<li>the same common questions in v2: <strong>313/361</strong>;</li>
-<li>newly accessible visual marks: <strong>123/137</strong>.</li>
-</ul>
-<p>Vision did not make the model generally cleverer. It made far more of the exam accessible.</p>
-<p>It was excellent on structured visuals such as logic circuits, frequency trees, geometry and ordinary graphs. It remained weak at precision visual measurement. A burette scale that a human could read cleanly defeated it repeatedly. Later physics testing found the same pattern on fine graph readings.</p>
-<p>The harness produced its own practical comedy. PNG input could crash the vision CLI, while PPM was stable. The text server occupied most of the GPU, so it had to stop before the vision runtime could load. The benchmark was testing systems engineering as well as exam answers.</p>
-<h2>Version 3: exam-permitted help only</h2>
-<p>The next version allowed only resources a real candidate would have for the relevant question: for example, a calculator where the paper permitted one, or the supplied formula and periodic-table material.</p>
-<p>The score moved from <strong>436/498 to 437/498</strong>.</p>
-<p>That tiny change was informative. On this paper set, the main leap had come from presenting the questions properly, not from adding permitted tools. Most remaining losses involved perception, source application, exam technique or unaided mathematical reasoning.</p>
-<h2>Freezing a broader baseline</h2>
-<p>We then expanded the curriculum with Physics, Business, Religious Studies, French and German reading and writing, plus the writing section of an English Language component. Copyright-restricted English source texts were unavailable, so the missing reading section was excluded rather than reconstructed.</p>
-<p>After cleaning the visual routes and preserving known limitations, the frozen baseline contained <strong>1,019 marks across 14 component/subject entries</strong>. The model scored <strong>893/1,019, or 87.6%</strong>.</p>
-<p>Again, that is a benchmark percentage, not an official collection of GCSE grades. French and German lacked listening and speaking; English was partial; several humanities marks involved judgement; and public papers may have appeared in training data.</p>
-<p>What made the baseline useful was not perfection. It was that future models could receive the same questions, resources, routing rules and marking philosophy without overwriting the old evidence.</p>
-<h2>The benchmark started changing our model choices</h2>
-<p>Once the route was frozen, we could compare models on the same 361-mark text-only subset.</p>
+<h2>From flattering pilot to useful test</h2>
+<p>The first Dirk/Qwen3.8 27B run scored <strong>82/84 (97.6%)</strong> on selected Maths, Biology and Computer Science questions. It mainly proved the harness. Questions had been chosen because text extraction worked, excluding much of the visual and awkward material. A high score was evidence that the test was too friendly.</p>
+<p>We kept the useful method: isolate mark schemes from the answering model, prompt neutrally, freeze raw answers before marking, mark conservatively and retain prompts, decisions and hashes.</p>
+<h2>The versions</h2>
 <table>
 <thead>
 <tr>
-<th>Local model profile</th>
+<th>Version</th>
+<th>Coverage and score</th>
+<th>What changed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Text only</td>
+<td><strong>313/361 (86.7%)</strong>; 361/498 marks accessible</td>
+<td>Six AQA components, no tools, calculator, retrieval or answer checking</td>
+</tr>
+<tr>
+<td>Native vision</td>
+<td><strong>436/498 (87.6%)</strong>; full coverage</td>
+<td>Visual questions routed through the model’s vision path</td>
+</tr>
+<tr>
+<td>Exam-permitted aids</td>
+<td><strong>437/498 (87.8%)</strong></td>
+<td>Only supplied formula material and allowed calculators</td>
+</tr>
+<tr>
+<td>Expanded frozen baseline</td>
+<td><strong>893/1,019 (87.6%)</strong></td>
+<td>14 subject/component entries with exclusions recorded</td>
+</tr>
+</tbody>
+</table>
+<p>The controlled vision comparison mattered most. The same common text questions scored <strong>313/361</strong> in both versions; newly accessible visual questions scored <strong>123/137</strong>. Vision expanded access rather than making the model generally cleverer.</p>
+<p>Structured diagrams, logic circuits and ordinary graphs worked well. Fine measurements such as burette scales did not. Higher non-calculator Maths, source-specific humanities answers and exam command words exposed other weaknesses. The harness had limits too: PPM images were stable where PNG could crash the vision CLI, and the text server had to release GPU memory before vision loaded.</p>
+<p>Permitted aids added only one mark. Presenting the paper properly mattered far more than adding tools.</p>
+<h2>Comparing local models</h2>
+<p>The frozen 361-mark text route then compared six profiles:</p>
+<table>
+<thead>
+<tr>
+<th>Model profile</th>
 <th style="text-align:right">Score</th>
-<th>What it exposed</th>
+<th>Practical reading</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Flash Next IQ3</td>
 <td style="text-align:right">340/361 (94.2%)</td>
-<td>Best academic result, especially Maths, but much slower</td>
+<td>Best academic result; slowest</td>
 </tr>
 <tr>
-<td>Qwen3.8 27B IQ4 with MTP</td>
+<td>Qwen3.8 27B IQ4 + MTP</td>
 <td style="text-align:right">323/361 (89.5%)</td>
-<td>Strong and fast all-round exam run</td>
+<td>Strong, faster all-rounder</td>
 </tr>
 <tr>
 <td>Dirk/Qwen3.8 27B</td>
 <td style="text-align:right">313/361 (86.7%)</td>
-<td>Strong reference and still better on broader agent reliability</td>
+<td>Reference model; stronger broader agent behaviour</td>
 </tr>
 <tr>
 <td>Base Qwen3.8 27B</td>
 <td style="text-align:right">312/361 (86.4%)</td>
-<td>Nearly identical academic capability without the same practical polish</td>
+<td>Nearly identical academic score</td>
 </tr>
 <tr>
 <td>Qwen3-Coder 30B</td>
 <td style="text-align:right">265/361 (73.4%)</td>
-<td>Very fast, but coding specialisation did not make it a good general student</td>
+<td>Fast; coding specialisation did not transfer</td>
 </tr>
 <tr>
 <td>Gemma 4 12B</td>
 <td style="text-align:right">227/361 (62.9%)</td>
-<td>Long-prompt instruction failures mattered more than its shorter tests suggested</td>
+<td>Long-prompt failures became obvious</td>
 </tr>
 </tbody>
 </table>
-<p>The winner was not automatically the model we should deploy. Flash Next took about <strong>13.9 minutes</strong> for the six-component capture and generated at roughly <strong>23 tokens per second</strong>. Faster 27B profiles were around twice that generation rate. Meanwhile, our separate agent benchmark tested tool use, exact outputs, arithmetic, retrieval and recovery behaviour.</p>
-<p>That is why <a href="/notes/what-is-tiggy/" class="wiki-link">Tiggy</a> now treats academic capability, agent reliability, speed and operational complexity as separate axes. The GCSE result became one important signal inside a tiered <a href="/topics/local-ai/" class="wiki-link">local AI</a> strategy, not a single leaderboard to obey.</p>
-<h2>Rules we would keep</h2>
-<p>If we built a similar benchmark again, these are the parts worth preserving:</p>
-<h3>Freeze before marking</h3>
-<p>Store raw responses before opening the mark scheme. Never rescue a weak answer with a follow-up prompt and quietly count the improved version.</p>
-<h3>Record exclusions as data</h3>
-<p>Every skipped visual or unavailable source should have an ID, mark value and reason. Otherwise a convenient subset can masquerade as a complete paper.</p>
-<h3>Separate capability from coverage</h3>
-<p>Version 2’s most important result was not 87.6%. It was that visual routing unlocked 137 additional marks while performance on common text questions stayed exactly flat.</p>
-<h3>Keep marking uncertainty visible</h3>
-<p>Objective science and calculation points can be high confidence. Extended History, Geography, Business and language writing deserve a lower confidence label or an independent second mark.</p>
-<h3>Preserve awkward failures</h3>
-<p>Wrong graph readings, impossible extracted questions, omitted sections and runtime crashes are not debris to tidy away. They explain what the system can actually tolerate.</p>
-<h3>Do not turn percentages into theatre</h3>
-<p>Public past papers create contamination risk. Partial components are not qualifications. A benchmark becomes more credible when its headline is smaller than its caveats permit, not larger.</p>
-<h2>What we learned</h2>
-<p>The experiment began as a slightly silly question about whether a home GPU could sit GCSE papers. It ended as one of our most useful pieces of evaluation infrastructure.</p>
-<p>It showed that a 16 GB local model could be remarkably strong across knowledge-heavy school subjects, yet brittle in symbolic Maths, precise visual reading, command-word discipline and long-prompt instruction following. It also showed that better presentation and routing could add more usable capability than another tool.</p>
-<p>Most importantly, it gave us a stable way to challenge the next exciting model announcement. We no longer have to ask whether a model feels clever.</p>
-<p>We can make it sit the exam.</p>
+<p>Flash Next took about <strong>13.9 minutes</strong> and generated near <strong>23 tokens/s</strong>; faster 27B profiles were roughly twice that rate. Academic capability therefore became one axis alongside agent reliability, speed and operational complexity in our <a href="/topics/local-ai/" class="wiki-link">local AI</a> choices.</p>
+<h2>Rules worth keeping</h2>
+<ul>
+<li>Freeze raw responses before opening the mark scheme; never rescue and silently re-score an answer.</li>
+<li>Record every excluded question, mark value and reason.</li>
+<li>Report capability and coverage separately.</li>
+<li>Mark subjective answers with visible uncertainty or independent review.</li>
+<li>Preserve runtime failures and awkward questions as evidence.</li>
+<li>Do not convert benchmark percentages into theatrical school grades.</li>
+</ul>
+<p>The result is a repeatable challenge for the next exciting model. We no longer have to ask whether it feels clever; we can give it the same exam.</p>
 </div>
 
   
@@ -188,49 +158,49 @@
           <li>
             <a href="https://huggingface.co/peculiar-ragdoll/Dirk-Qwen3.8-27B-GGUF">Dirk-Qwen3.8-27B GGUF</a>
             <strong> · Model weights</strong>
-            <br><span>The model repository for the original pilot and frozen expanded baseline, including its vision projector.</span>
+            <br><span>Model repository for the pilot and frozen expanded baseline, including its vision projector.</span>
           </li>
         
           <li>
             <a href="https://huggingface.co/Bucoid/Qwen3.8-27B-IQ4-XS-MTP-16GB-VRAM-GGUF">Qwen3.8 27B IQ4_XS with MTP</a>
             <strong> · Model weights</strong>
-            <br><span>The 16 GB-oriented Qwen profile used in the later text-only comparison.</span>
+            <br><span>The 16 GB-oriented Qwen profile used in the text-only comparison.</span>
           </li>
         
           <li>
             <a href="https://huggingface.co/unsloth/Qwen3.8-27B-GGUF">Base Qwen3.8-27B GGUF</a>
             <strong> · Model weights</strong>
-            <br><span>The base-family comparator used to separate general model capability from Dirk-specific behaviour.</span>
+            <br><span>Comparator used to separate general model capability from Dirk-specific behaviour.</span>
           </li>
         
           <li>
             <a href="https://huggingface.co/lmstudio-community/Qwen3-Coder-30B-A3B-Instruct-GGUF">Qwen3-Coder-30B-A3B Instruct GGUF</a>
             <strong> · Model weights</strong>
-            <br><span>The fast coding-specialised comparator in the six-model text route.</span>
+            <br><span>The coding-specialised comparator.</span>
           </li>
         
           <li>
             <a href="https://huggingface.co/lmstudio-community/gemma-4-12B-it-QAT-GGUF">Gemma 4 12B QAT GGUF</a>
             <strong> · Model weights</strong>
-            <br><span>The smaller fallback model whose long-prompt failures were much clearer in the exam benchmark.</span>
+            <br><span>The smaller fallback model whose long-prompt failures became clear in the benchmark.</span>
           </li>
         
           <li>
             <a href="https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF">Qwen3.8 Flash Next GGUF</a>
             <strong> · Model weights</strong>
-            <br><span>Source repository for the IQ3 profile that achieved the strongest text-only result.</span>
+            <br><span>Source for the IQ3 profile with the strongest text-only result.</span>
           </li>
         
           <li>
             <a href="https://github.com/thecodacus/llama.cpp">Codacus llama.cpp performance fork</a>
             <strong> · Runtime source</strong>
-            <br><span>The exact runtime family used for the Flash Next expert-cache experiment.</span>
+            <br><span>Runtime family used for the Flash Next expert-cache experiment.</span>
           </li>
         
           <li>
             <a href="https://www.youtube.com/watch?v=IH8XmxiwliQ">Is Frontier Class Local AI Finally Practical?</a>
             <strong> · Video</strong>
-            <br><span>The Codacus experiment that prompted our Flash Next configuration and follow-up benchmark run.</span>
+            <br><span>The experiment that prompted our Flash Next configuration and follow-up run.</span>
           </li>
         
       </ul>
