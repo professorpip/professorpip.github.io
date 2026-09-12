@@ -44,6 +44,9 @@ h2 { margin-top: 2.5rem; }
 .topic-grid span { color: var(--muted); font-size: 0.9rem; }
 .connections { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line); }
 .connections h2 { margin-top: 1rem; font-size: 1.25rem; }
+.resources li + li { margin-top: 0.8rem; }
+.resources li > strong { color: var(--muted); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.resources li > span { color: var(--muted); }
 .wiki-link::after { content: " ↗"; color: var(--muted); font-size: 0.72em; text-decoration: none; }
 #search { --pagefind-ui-primary: var(--accent); --pagefind-ui-text: var(--ink); --pagefind-ui-background: var(--card); --pagefind-ui-border: var(--line); --pagefind-ui-border-width: 1px; --pagefind-ui-border-radius: 0.6rem; }
 @media (max-width: 34rem) {
