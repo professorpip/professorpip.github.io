@@ -27,13 +27,13 @@
       <li><a href="/previews/pr-7/topics/publishing/">Publishing</a></li><li><a href="/previews/pr-7/topics/github/">Github</a></li><li><a href="/previews/pr-7/topics/automation/">Automation</a></li><li><a href="/previews/pr-7/topics/eleventy/">Eleventy</a></li><li><a href="/previews/pr-7/topics/agent-architecture/">Agent Architecture</a></li>
     </ul>
   
-  <div class="prose"><p>The brief was simple:</p>
+  <div class="prose"><h2>In brief</h2>
 <ul>
-<li>Tiggy writes up completed experiments.</li>
-<li>Phil reviews the real page on his phone.</li>
-<li>Nothing becomes public without his approval.</li>
-<li>Publishing takes one action.</li>
-<li>Hosting and maintenance cost effectively nothing.</li>
+<li>Drafts, evidence and editorial planning stay in a private source repository; only generated files enter the public site repository.</li>
+<li>Every pull request gets an unlisted, <code>noindex</code> rendered preview for phone review.</li>
+<li>Merging that exact pull request is the human publication decision.</li>
+<li>GitHub Actions rebuilds the approved source, publishes it through GitHub Pages and removes the closed preview.</li>
+<li>Six completed pull requests and four live articles proved the loop before this write-up.</li>
 </ul>
 <p>“One tap” describes the release, not the writing. A useful note still needs evidence, editing and checks.</p>
 <figure class="article-figure"><img src="/previews/pr-7/assets/diagrams/one-tap-lab-notebook-workflow.svg" alt="Architecture diagram showing Tiggy preparing evidence and Markdown in a private source branch, GitHub Actions validating it and publishing an unlisted noindex preview for Phil&#39;s phone review, then an approved merge producing the public site from a separate generated-output repository while a closed pull request removes its preview" loading="lazy" decoding="async"><figcaption>Private source stays on the left of the publication boundary. Only generated preview or production files cross into the public Pages repository.</figcaption></figure>
@@ -46,6 +46,7 @@
 </ol>
 <p>The private repository’s workflow has a deploy key that can write to the public one. Access does not flow back the other way. This keeps the workshop private while leaving the finished site cheap and static.</p>
 <h2>The working loop</h2>
+<p>Drafting is deliberately three-pass: write the full evidence-backed version; challenge every paragraph, sentence and word until only useful detail remains; then add no more than five bullets that give a time-poor reader the whole gist.</p>
 <p>For each article:</p>
 <ol>
 <li>Tiggy reconstructs the project from preserved artefacts, using memory and transcripts only to locate evidence. Private operational details are removed or generalised.</li>
