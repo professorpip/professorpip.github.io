@@ -33,6 +33,7 @@
 <p>The Mac mini running Tiggy has speakers but no usable microphone. An iPhone already has excellent microphones, echo cancellation and a browser capable of WebRTC, so it became the audio front end.</p>
 <p>The resulting path was:</p>
 <p><code>iPhone Safari → WebRTC → speech detection → local transcription → OpenClaw → streamed response → local speech synthesis → WebRTC → iPhone speaker</code></p>
+<figure class="article-figure"><img src="/previews/pr-5/assets/diagrams/live-voice-tiggy-pipeline.svg" alt="Block diagram showing speech travelling from an iPhone through WebRTC, voice detection, Nemotron transcription and OpenClaw, then back through Kokoro speech synthesis to the iPhone" loading="lazy" decoding="async"><figcaption>The phone supplies the ears and mouth; OpenClaw remains the brain.</figcaption></figure>
 <p>Everything stayed on the home network. The prototype did not require a router port, public service, database or change to Tiggy’s production model and failover configuration.</p>
 <h2>The local speech stack</h2>
 <p>Two small Apple-Silicon-friendly models run on demand:</p>
