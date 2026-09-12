@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Moving ZHA to a remote coordinator · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <link rel="stylesheet" href="/previews/pr-10/assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/previews/pr-10/">Phil &amp; Tiggy&#39;s Lab Notes</a>
+      <nav aria-label="Main navigation">
+        <a href="/previews/pr-10/topics/">Topics</a>
+        <a href="/previews/pr-10/search/">Search</a>
+        <a href="/previews/pr-10/about/">About</a>
+      </nav>
+    </header>
+    <main data-pagefind-body><article class="note">
+  <h1>Moving ZHA to a remote coordinator</h1>
+  
+  <p class="eyebrow project-period">Project period · <time datetime="2026-06-14T00:00:00.000Z">June 2026</time></p>
+  <p class="standfirst">An OpenWRT access point moved the Zigbee radio closer to the garden without moving Home Assistant.</p>
+  
+    <ul class="topic-chips" aria-label="Topics">
+      <li><a href="/previews/pr-10/topics/home-assistant/">Home Assistant</a></li><li><a href="/previews/pr-10/topics/zigbee/">Zigbee</a></li><li><a href="/previews/pr-10/topics/openwrt/">Openwrt</a></li><li><a href="/previews/pr-10/topics/home-lab/">Home Lab</a></li>
+    </ul>
+  
+  <div class="prose"><h2>In brief</h2>
+<ul>
+<li>The Zigbee coordinator was poorly placed beside Home Assistant, while an OpenWRT access point already sat nearer the garden.</li>
+<li>Moving the USB dongle required the correct CP210x kernel driver before a serial device appeared.</li>
+<li>We removed a stale serial listener and exposed one 115200-baud raw <code>ser2net</code> endpoint.</li>
+<li>ZHA changed from the old socket address to the new one after backups.</li>
+<li>Coordinator and mains-powered devices returned after restart; sleepy battery devices were allowed time to report.</li>
+</ul>
+<p>Improving Zigbee radio placement did not require moving Home Assistant. It required treating a spare USB port on an access point as a remote serial host.</p>
+<figure class="article-figure"><img src="/previews/pr-10/assets/diagrams/remote-zha.svg" alt="Home Assistant connects over the LAN to ser2net on an OpenWRT access point, which owns the USB Zigbee coordinator" loading="lazy" decoding="async"><figcaption>Only the radio moves; Home Assistant and the Zigbee network remain logically in place.</figcaption></figure>
+<h2>Prepare the remote end</h2>
+<p>The coordinator was a Sonoff Zigbee USB dongle connected to an OpenWRT access point nearer the garden room. USB enumeration showed the adapter, but <code>/dev/ttyUSB0</code> was absent until the CP210x USB-serial package was installed.</p>
+<p>The access point already had <code>ser2net</code>, including a stale static listener aimed at the same device with the wrong speed. We backed up both configuration forms, removed the stale listener and created one raw endpoint mapping the serial device at <strong>115200 8N1</strong>. One process now owned the radio.</p>
+<h2>Move ZHA carefully</h2>
+<p>Home Assistant’s ZHA entry and the access-point files were backed up before changing the socket target. The subsequent API restart call returned a gateway timeout because Home Assistant dropped the request while restarting; service health, not the HTTP response alone, decided whether the change worked.</p>
+<p>The API returned after roughly seven seconds and ZHA reached <code>loaded</code>. The coordinator identified correctly. Mains-powered routers and thermostats came back with link-quality readings. Two battery soil sensors remained unavailable immediately after restart, which was not enough evidence of failure: sleepy devices may wait for their next wake or report cycle.</p>
+<h2>Result</h2>
+<p>The coordinator moved closer to the weak end of the mesh without relocating the automation server or passing a USB device into it. OpenWRT became a small serial appliance alongside its network role.</p>
+<p>The reusable procedure is short: prove USB enumeration, install the exact serial driver, ensure one listener owns the device, back up both ends, change the socket, restart once and judge recovery by coordinator and device state over time.</p>
+<p>The network socket is a live serial link, not an ordinary health-check port. That distinction produced its own later lesson.</p>
+</div>
+
+  
+    <aside class="connections resources">
+      <h2>References and resources</h2>
+      <ul>
+        
+          <li>
+            <a href="https://www.home-assistant.io/integrations/zha/">Home Assistant ZHA integration</a>
+            <strong> · Official documentation</strong>
+            <br><span>Configuration and radio guidance for the Zigbee Home Automation integration.</span>
+          </li>
+        
+          <li>
+            <a href="https://github.com/cminyard/ser2net">ser2net</a>
+            <strong> · Source repository</strong>
+            <br><span>Serial-to-network service used to expose the USB coordinator.</span>
+          </li>
+        
+          <li>
+            <a href="https://openwrt.org/docs/guide-user/storage/usb-installing">OpenWrt USB serial packages</a>
+            <strong> · Documentation</strong>
+            <br><span>Background for installing the USB serial support required by the coordinator.</span>
+          </li>
+        
+      </ul>
+    </aside>
+  
+
+  
+  
+    <aside class="connections">
+      <h2>Related notes</h2>
+      <ul>
+        <li><a href="/previews/pr-10/notes/rescuing-old-sonoff-basics/">Rescuing old Sonoff Basics with Tasmota and ESPHome</a></li>
+      </ul>
+    </aside>
+  
+
+  
+  
+</article>
+</main>
+    <footer>Built from Markdown. No trackers, adverts or algorithmic nonsense.</footer>
+  </body>
+</html>

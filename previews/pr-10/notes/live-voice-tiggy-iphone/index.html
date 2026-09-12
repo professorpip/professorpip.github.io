@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Giving Tiggy a live voice through an iPhone · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <link rel="stylesheet" href="/previews/pr-10/assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/previews/pr-10/">Phil &amp; Tiggy&#39;s Lab Notes</a>
+      <nav aria-label="Main navigation">
+        <a href="/previews/pr-10/topics/">Topics</a>
+        <a href="/previews/pr-10/search/">Search</a>
+        <a href="/previews/pr-10/about/">About</a>
+      </nav>
+    </header>
+    <main data-pagefind-body><article class="note">
+  <h1>Giving Tiggy a live voice through an iPhone</h1>
+  
+  <p class="eyebrow project-period">Project period · <time datetime="2026-09-12T00:00:00.000Z">September 2026</time></p>
+  <p class="standfirst">A LAN-only WebRTC experiment turned an iPhone into the ears and voice of a local AI assistant—without replacing OpenClaw as the brain.</p>
+  
+    <ul class="topic-chips" aria-label="Topics">
+      <li><a href="/previews/pr-10/topics/tiggy/">Tiggy</a></li><li><a href="/previews/pr-10/topics/voice/">Voice</a></li><li><a href="/previews/pr-10/topics/openclaw/">OpenClaw</a></li><li><a href="/previews/pr-10/topics/local-ai/">Local AI</a></li><li><a href="/previews/pr-10/topics/webrtc/">WebRTC</a></li>
+    </ul>
+  
+  <div class="prose"><h2>In brief</h2>
+<ul>
+<li>An iPhone browser became Tiggy’s microphone and speaker over LAN-only WebRTC; OpenClaw remained the brain.</li>
+<li>Nemotron Speech ASR 0.6B handled transcription and Kokoro 82M generated a British female voice locally.</li>
+<li>Final transcription took roughly 0.24–0.60 seconds; warm text-to-speech produced first audio in 0.11–0.13 seconds.</li>
+<li>A live kitchen conversation—not just synthetic tests—proved the prototype usable.</li>
+<li>Interruption, tool-time steering and rejection of tiny false utterances remain experimental.</li>
+</ul>
+<h2>The question</h2>
+<p>Could <a href="/previews/pr-10/notes/what-is-tiggy/" class="wiki-link">Tiggy</a> hold a natural hands-free conversation without becoming a separate assistant? Her tools, memory, model routing and session context had to stay in OpenClaw; the voice layer should supply ears and a mouth.</p>
+<p>The Mac mini had no useful microphone. An iPhone already had good microphones, echo cancellation and WebRTC-capable Safari.</p>
+<figure class="article-figure"><img src="/previews/pr-10/assets/diagrams/live-voice-tiggy-pipeline.svg" alt="Block diagram showing speech travelling from an iPhone through WebRTC, voice detection, Nemotron transcription and OpenClaw, then back through Kokoro speech synthesis to the iPhone" loading="lazy" decoding="async"><figcaption>The phone supplies the ears and mouth; OpenClaw remains the brain.</figcaption></figure>
+<p>The path was:</p>
+<p><code>iPhone Safari → WebRTC → speech detection → local transcription → OpenClaw → streamed response → local speech synthesis → iPhone</code></p>
+<p>Everything stayed on the home network. No router port, public service, database or production-model change was required.</p>
+<h2>The local speech loop</h2>
+<p><strong>NVIDIA Nemotron Speech ASR 0.6B</strong> transcribed speech; <strong>Kokoro 82M</strong> spoke replies using the British female <code>bf_emma</code> voice. Together they used about <strong>2 GB of memory</strong>.</p>
+<p>Safari supplied capture-side echo cancellation. Server-side voice detection plus an adjustable energy gate rejected background noise. As OpenClaw returned stable sentences, Kokoro began speaking before the full answer existed. Listening continued during playback so new speech could cancel queued audio.</p>
+<h2>Results</h2>
+<p>Laboratory checks found:</p>
+<ul>
+<li>final transcription in roughly <strong>0.24–0.60 seconds</strong>;</li>
+<li>warm first speech audio in <strong>0.11–0.13 seconds</strong>;</li>
+<li>about <strong>71 dB</strong> echo reduction with no false detections in synthetic echo tests;</li>
+<li>a correct transcript and non-silent reply in an injected end-to-end WebRTC test running under the persistent macOS service.</li>
+</ul>
+<p>The decisive test happened in the kitchen. Phil opened Safari, set the noise threshold to about <strong>−37 dBFS</strong> and held a natural conversation while the phone showed recognised text, audio level and speaking state.</p>
+<h2>Teaching it “Tiggy”</h2>
+<p>The recogniser heard “Tiggy” as “Ticky”. Nemotron’s MLX implementation had no genuine hotword input, so the fix used a narrow decoder bias only after a plausible near-miss plus a conservative fallback for a few standalone spellings.</p>
+<p>The recorded phrase changed to “Tiggy, are you there?” while “Tina”, “tiger” and “tricky” stayed unchanged. Phil then confirmed the live result was “much better”.</p>
+<h2>Still a prototype</h2>
+<p>Streaming removes delay after generation starts; it cannot hide a slow first token. The next tests are deliberate interruption while Tiggy speaks, steering during tool use, better rejection of tiny utterances and clearer latency telemetry.</p>
+<p>Remote mobile-data access can wait. The experiment answered the useful question: an iPhone can be a natural local voice terminal while Tiggy remains Tiggy.</p>
+</div>
+
+  
+
+  
+  
+    <aside class="connections">
+      <h2>Related notes</h2>
+      <ul>
+        <li><a href="/previews/pr-10/notes/local-failover-orphan-process/">Local-model failover and the orphan-process bug</a></li><li><a href="/previews/pr-10/notes/why-moshika-was-wrong-for-tiggy/">Why Moshika was impressive but wrong for Tiggy</a></li><li><a href="/previews/pr-10/notes/what-is-tiggy/">What—and who—is Tiggy?</a></li><li><a href="/previews/pr-10/notes/system-versus-model-native-duplex/">System duplex versus model-native duplex</a></li>
+      </ul>
+    </aside>
+  
+
+  
+  
+</article>
+</main>
+    <footer>Built from Markdown. No trackers, adverts or algorithmic nonsense.</footer>
+  </body>
+</html>
