@@ -1,0 +1,38 @@
+:root {
+  color-scheme: light dark;
+  --bg: #f5f2ea;
+  --ink: #17211b;
+  --muted: #5b655e;
+  --card: #fffdf7;
+  --accent: #d75f24;
+  --line: #d8d2c5;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.65; }
+a { color: var(--accent); text-underline-offset: 0.18em; }
+.site-header, main, footer { width: min(46rem, calc(100% - 2rem)); margin-inline: auto; }
+.site-header { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 0; border-bottom: 1px solid var(--line); }
+.brand { color: var(--ink); font-weight: 800; text-decoration: none; }
+main { padding: 3.5rem 0 5rem; }
+footer { border-top: 1px solid var(--line); padding: 1.5rem 0 3rem; color: var(--muted); font-size: 0.9rem; }
+h1, h2, h3 { line-height: 1.15; letter-spacing: -0.025em; }
+h1 { font-size: clamp(2.5rem, 9vw, 5rem); margin: 0.15em 0 0.35em; }
+h2 { margin-top: 2.5rem; }
+.hero { padding: 3rem 0 4rem; }
+.hero > p:last-child, .standfirst { color: var(--muted); font-size: 1.25rem; max-width: 38rem; }
+.eyebrow { color: var(--accent); font-size: 0.78rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; }
+.note-list { list-style: none; padding: 0; }
+.note-list li { background: var(--card); border: 1px solid var(--line); border-radius: 0.8rem; margin: 1rem 0; padding: 1.25rem; }
+.note-list strong { font-size: 1.2rem; }
+.note-list time { display: block; color: var(--muted); font-size: 0.88rem; margin-top: 0.2rem; }
+.note-list p { margin-bottom: 0; }
+.note { background: var(--card); border: 1px solid var(--line); border-radius: 1rem; padding: clamp(1.25rem, 5vw, 3.5rem); }
+.note h1 { font-size: clamp(2.2rem, 8vw, 4.5rem); }
+.prose img { max-width: 100%; height: auto; border-radius: 0.5rem; }
+.prose pre { overflow-x: auto; padding: 1rem; border-radius: 0.5rem; background: #17211b; color: #f7f3e9; }
+.prose code { font-size: 0.92em; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #111713; --ink: #eef2eb; --muted: #aeb9b0; --card: #19211c; --line: #344037; --accent: #ff8a50; }
+}
