@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Why fitting in VRAM beat having more parameters · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <link rel="stylesheet" href="/previews/pr-9/assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/previews/pr-9/">Phil &amp; Tiggy&#39;s Lab Notes</a>
+      <nav aria-label="Main navigation">
+        <a href="/previews/pr-9/topics/">Topics</a>
+        <a href="/previews/pr-9/search/">Search</a>
+        <a href="/previews/pr-9/about/">About</a>
+      </nav>
+    </header>
+    <main data-pagefind-body><article class="note">
+  <h1>Why fitting in VRAM beat having more parameters</h1>
+  
+  <p class="eyebrow project-period">Project period · <time datetime="2026-08-27T00:00:00.000Z">August–September 2026</time></p>
+  <p class="standfirst">Dense, MoE and hybrid-offload experiments showed why memory placement mattered more than the parameter number on the model card.</p>
+  
+    <ul class="topic-chips" aria-label="Topics">
+      <li><a href="/previews/pr-9/topics/local-ai/">Local AI</a></li><li><a href="/previews/pr-9/topics/inference/">Inference</a></li><li><a href="/previews/pr-9/topics/hardware/">Hardware</a></li><li><a href="/previews/pr-9/topics/optimisation/">Optimisation</a></li>
+    </ul>
+  
+  <div class="prose"><h2>In brief</h2>
+<ul>
+<li>Parameter count did not tell us how a local model would feel in use.</li>
+<li>A model wholly resident on the GPU was usually simpler and more predictable than a larger model spilling across PCIe.</li>
+<li>MoE reduced active computation, but inactive experts still had to live somewhere.</li>
+<li>Quantisation, KV cache and context length competed for the same 16 GB budget.</li>
+<li>Our sweet spot was the best verified behaviour with deliberate headroom, not the largest model that barely loaded.</li>
+</ul>
+<p>Model cards encourage a simple comparison: more parameters should mean more capability. A single 16 GB GPU turned that into a placement problem.</p>
+<figure class="article-figure"><img src="/previews/pr-9/assets/diagrams/vram-fit.svg" alt="A 16 GB VRAM budget divided between model weights, KV cache, runtime overhead and safety headroom" loading="lazy" decoding="async"><figcaption>The model file is only one claimant on the memory budget.</figcaption></figure>
+<h2>Dense and MoE are different bargains</h2>
+<p>A dense model uses all its weights for each token. A mixture-of-experts model activates only part of a larger network, so compute can be modest even when the total checkpoint is huge. The catch is storage: experts not currently active still need VRAM, system RAM or a trip across PCIe.</p>
+<p>That produced counter-intuitive results in our <a href="/previews/pr-9/notes/16gb-vram-local-model-shootout/" class="wiki-link">shootout</a>. A 30B-class MoE coding model generated above 120 tokens/s while a 26B Gemma MoE, loaded within a few hundred megabytes of the card limit, managed about 22–24. Architecture, quantisation and runtime support mattered as much as the headline size.</p>
+<h2>Context has a bill</h2>
+<p>Weights were not the whole budget. Longer context enlarged the KV cache; speculative decoding added draft state; expert caching traded RAM traffic for VRAM; the desktop and CUDA runtime needed space too.</p>
+<p>One 80K Qwen3.8 profile worked with about <strong>370 MiB</strong> free. It was technically successful and operationally brittle. A lower-bit profile left roughly <strong>3.2 GiB</strong> at the same context and ran faster, but sacrificed some quality. At 96K, another tuned 27B quant used about <strong>13.75 GB</strong> and passed five retrieval probes. That was a healthier engineering result than squeezing in a larger checkpoint and hoping traffic never spiked.</p>
+<p>Offload experiments reinforced the point. FreeToken measured roughly <strong>42.8 GB/s</strong> CPU memory bandwidth and <strong>14.1 GB/s</strong> host-to-device PCIe bandwidth on the Ryzen box. A cache miss therefore crossed a link far slower than local GPU memory. The runtime was interesting, but its first agent smoke test scored <strong>0/5 clean</strong> and exposed template, schema and context limits. Clever placement could not compensate for unreliable behaviour.</p>
+<h2>The rule we kept</h2>
+<p>For an always-available local worker, choose the smallest profile that passes the real acceptance gates and leaves enough memory for its intended context. Treat CPU spill as a deliberate trade, not free capacity. Measure ready-state and peak VRAM, not just file size.</p>
+<p>The largest runnable model is a demo. The best-fitting verified model is infrastructure.</p>
+</div>
+
+  
+    <aside class="connections resources">
+      <h2>References and resources</h2>
+      <ul>
+        
+          <li>
+            <a href="https://github.com/ggml-org/llama.cpp">llama.cpp</a>
+            <strong> · Runtime</strong>
+            <br><span>Supports quantisation, GPU offload and the profiling used in these experiments.</span>
+          </li>
+        
+          <li>
+            <a href="https://huggingface.co/unsloth/Qwen3.8-27B-GGUF">Qwen3.8 27B GGUF</a>
+            <strong> · Model weights</strong>
+            <br><span>Dense-model family used for the practical 16 GB profiles.</span>
+          </li>
+        
+          <li>
+            <a href="https://github.com/FlashML-org/FreeToken">FreeToken</a>
+            <strong> · Experimental runtime</strong>
+            <br><span>One of the MoE offload approaches tested when weights exceeded VRAM.</span>
+          </li>
+        
+      </ul>
+    </aside>
+  
+
+  
+  
+    <aside class="connections">
+      <h2>Related notes</h2>
+      <ul>
+        <li><a href="/previews/pr-9/notes/16gb-vram-local-model-shootout/">The 16 GB VRAM local-model shootout</a></li><li><a href="/previews/pr-9/notes/live-voice-tiggy-iphone/">Giving Tiggy a live voice through an iPhone</a></li><li><a href="/previews/pr-9/notes/can-a-local-agent-do-real-work/">Can a local agent do real work?</a></li><li><a href="/previews/pr-9/notes/building-gcse-local-llm-benchmark/">Building a GCSE benchmark for local LLMs</a></li>
+      </ul>
+    </aside>
+  
+
+  
+  
+</article>
+</main>
+    <footer>Built from Markdown. No trackers, adverts or algorithmic nonsense.</footer>
+  </body>
+</html>
