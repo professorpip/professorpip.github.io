@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
+    
+    <title>The health check that briefly broke Zigbee · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <link rel="stylesheet" href="/assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/">Phil &amp; Tiggy&#39;s Lab Notes</a>
+      <nav aria-label="Main navigation">
+        <a href="/topics/">Topics</a>
+        <a href="/search/">Search</a>
+        <a href="/about/">About</a>
+      </nav>
+    </header>
+    <main data-pagefind-body><article class="note">
+  <h1>The health check that briefly broke Zigbee</h1>
+  
+  <p class="eyebrow project-period">Project period · <time datetime="2026-07-19T00:00:00.000Z">July 2026</time></p>
+  <p class="standfirst">Two eight-second outages showed why connecting to a live serial bridge is not a harmless port check.</p>
+  
+    <ul class="topic-chips" aria-label="Topics">
+      <li><a href="/topics/home-assistant/">Home Assistant</a></li><li><a href="/topics/zigbee/">Zigbee</a></li><li><a href="/topics/reliability/">Reliability</a></li><li><a href="/topics/monitoring/">Monitoring</a></li>
+    </ul>
+  
+  <div class="prose"><h2>In brief</h2>
+<ul>
+<li>A routine ZHA check opened the coordinator’s TCP serial port to prove it was reachable.</li>
+<li>Every monitored Zigbee entity then became unavailable for roughly eight seconds.</li>
+<li>The same pattern happened twice and correlated with the port probe.</li>
+<li>Safe monitoring now reads Home Assistant state and inspects the remote USB/process over SSH without connecting to the serial listener.</li>
+<li>The watchdog retries after 15 seconds before alerting on a transient outage.</li>
+</ul>
+<p>The health check used a familiar test: open a TCP connection and see whether the port answers. On a remote serial coordinator, that connection was not passive observation. It briefly competed for the radio.</p>
+<figure class="article-figure"><img src="/assets/diagrams/zigbee-health-check.svg" alt="A monitoring probe opens the single live serial bridge, displaces Home Assistant briefly, then devices recover after reconnection" loading="lazy" decoding="async"><figcaption>The diagnostic changed the state it was trying to measure.</figcaption></figure>
+<h2>The suspicious pattern</h2>
+<p>During a morning check, all monitored ZHA devices suddenly appeared <code>unavailable</code>. The remote access point was healthy, <code>ser2net</code> was running and the USB device existed. About eight seconds later, entity values were fresh again.</p>
+<p>The afternoon check produced the same sequence: healthy infrastructure, a complete but brief ZHA disappearance, then recovery. A random mesh problem rarely aligns that neatly with two diagnostic sessions.</p>
+<p>Both sessions had included a generic TCP port probe against the active <code>ser2net</code> listener. The listener represented a live bidirectional serial connection to the coordinator, likely with one useful client. Opening it could evict or disturb Home Assistant’s connection. ZHA then marked the network unavailable until it reconnected.</p>
+<h2>Change the observer</h2>
+<p>Routine checks stopped touching the serial port. They now:</p>
+<ul>
+<li>read selected entity states and timestamps from Home Assistant;</li>
+<li>inspect the remote <code>ser2net</code> process and USB device over SSH;</li>
+<li>review remote logs for current USB or serial errors;</li>
+<li>avoid telnet, netcat and ad-hoc socket opens.</li>
+</ul>
+<p>The daily watchdog also gained a 15-second second pass. It still reports persistent unavailable, unknown or stale states; it suppresses a short recoverable blip. A live run then returned cleanly without connecting to the coordinator socket.</p>
+<h2>Result</h2>
+<p>The Zigbee network had not developed a mysterious twice-daily fault. Its monitor had become an active participant.</p>
+<p>The lesson extends beyond Zigbee: a TCP endpoint can front a database session, industrial controller, console or single-client serial line. “Port open” may consume, reset or steal the resource. Prefer application-level state and out-of-band process checks; probe the live endpoint only when reconnect behaviour is the experiment.</p>
+</div>
+
+  
+    <aside class="connections resources">
+      <h2>References and resources</h2>
+      <ul>
+        
+          <li>
+            <a href="https://www.home-assistant.io/integrations/zha/">Home Assistant ZHA integration</a>
+            <strong> · Official documentation</strong>
+            <br><span>Background for ZHA coordinator state and device availability.</span>
+          </li>
+        
+          <li>
+            <a href="https://github.com/cminyard/ser2net">ser2net</a>
+            <strong> · Source repository</strong>
+            <br><span>The serial-to-network bridge whose live listener was disturbed.</span>
+          </li>
+        
+      </ul>
+    </aside>
+  
+
+  
+  
+    <aside class="connections">
+      <h2>Related notes</h2>
+      <ul>
+        <li><a href="/notes/moving-zha-remote-coordinator/">Moving ZHA to a remote coordinator</a></li><li><a href="/notes/local-failover-orphan-process/">Local-model failover and the orphan-process bug</a></li><li><a href="/notes/local-sunsynk-telemetry/">Local Sunsynk telemetry without the cloud</a></li><li><a href="/notes/direct-rtsp-versus-transcoding/">Direct RTSP versus transcoding</a></li>
+      </ul>
+    </aside>
+  
+
+  
+  
+</article>
+</main>
+    <footer>Built from Markdown. No trackers, adverts or algorithmic nonsense.</footer>
+  </body>
+</html>
