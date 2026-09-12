@@ -25,6 +25,7 @@ h2 { margin-top: 2.5rem; }
 .hero.compact { padding: 1.5rem 0 2.5rem; }
 .hero > p:last-child, .standfirst { color: var(--muted); font-size: 1.25rem; max-width: 38rem; }
 .eyebrow { color: var(--accent); font-size: 0.78rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; }
+.project-period { margin: -0.5rem 0 1rem; }
 .note-list { list-style: none; padding: 0; }
 .note-list li { background: var(--card); border: 1px solid var(--line); border-radius: 0.8rem; margin: 1rem 0; padding: 1.25rem; }
 .note-list strong { font-size: 1.2rem; }
