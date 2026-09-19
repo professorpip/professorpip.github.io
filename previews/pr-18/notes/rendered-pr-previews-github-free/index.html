@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Rendered pull-request previews on GitHub Free · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <link rel="stylesheet" href="/previews/pr-18/assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/previews/pr-18/">Phil &amp; Tiggy&#39;s Lab Notes</a>
+      <nav aria-label="Main navigation">
+        <a href="/previews/pr-18/topics/">Topics</a>
+        <a href="/previews/pr-18/search/">Search</a>
+        <a href="/previews/pr-18/about/">About</a>
+      </nav>
+    </header>
+    <main data-pagefind-body><article class="note">
+  <h1>Rendered pull-request previews on GitHub Free</h1>
+  
+  <p class="eyebrow project-period">Project period · <time datetime="2026-09-12T00:00:00.000Z">September 2026</time></p>
+  <p class="standfirst">A private repository can&#39;t enable GitHub Pages on GitHub Free, so a separate public generated-site repository became the deploy target for both production and unlisted, noindexed PR previews.</p>
+  
+    <ul class="topic-chips" aria-label="Topics">
+      <li><a href="/previews/pr-18/topics/github/">Github</a></li><li><a href="/previews/pr-18/topics/publishing/">Publishing</a></li><li><a href="/previews/pr-18/topics/eleventy/">Eleventy</a></li><li><a href="/previews/pr-18/topics/automation/">Automation</a></li>
+    </ul>
+  
+  <div class="prose"><h2>In brief</h2>
+<ul>
+<li>The goal was simple: draft articles privately, review rendered pull requests from a phone, and publish with one action — all for free.</li>
+<li>GitHub Pages cannot be enabled on a private repository under GitHub Free, which initially looked like a dead end.</li>
+<li>The fix was architectural, not a paid upgrade: keep the article source private, and let CI publish generated HTML to a second, public, otherwise-empty repository that Pages happily serves.</li>
+<li>Every pull request gets its own unlisted, <code>noindex</code>, path-prefixed preview under that public repo, automatically posted back as a PR comment and automatically deleted when the PR closes.</li>
+<li>Verification treats “the workflow succeeded” and “the public page is actually live and correct” as two different claims, because GitHub’s own Pages deployment layer can lag behind a green Actions run.</li>
+</ul>
+<figure class="article-figure"><img src="/previews/pr-18/assets/diagrams/pr-preview-architecture.svg" alt="Diagram of a private source repository&#39;s CI publishing both production and per-PR preview builds to a separate public Pages-enabled repository" loading="lazy" decoding="async"><figcaption>The private repo and the public repo are two different GitHub projects, joined only by a scoped deploy key.</figcaption></figure>
+<h2>Question</h2>
+<p>The publishing goal was specific: draft lab-notebook articles privately, let a human review each one as a properly rendered web page — not a raw diff — from a phone, and publish with a single explicit action, all without paying for hosting. GitHub Pages is the obvious free static-hosting mechanism, and GitHub Actions is the obvious free CI. The blocker was that GitHub Free doesn’t allow Pages to be enabled on a <em>private</em> repository, and the article source needed to stay private until explicitly published. The question was whether a genuinely free architecture could still deliver rendered, reviewable previews without either exposing the source repository or paying for a plan upgrade.</p>
+<h2>Setup</h2>
+<p>The article source is an <a href="https://www.11ty.dev/">Eleventy</a> static-site project living in a private GitHub repository. An entirely separate, otherwise-empty public repository was created purely as a Pages deployment target. GitHub Actions in the private repository builds the site and, depending on the trigger, either publishes it to the public repository’s production root or to a per-pull-request preview path.</p>
+<h2>What we tried</h2>
+<p><strong>Splitting “source of truth” from “hosting target.”</strong> Rather than trying to work around GitHub Free’s Pages restriction directly, the architecture simply stopped needing Pages on the private repository at all. The private repo holds the article Markdown, front matter, diagrams and build tooling; the public repo holds nothing but generated HTML, pushed there by CI. A scoped deploy key, stored as a repository secret in the private repo, gives the publish workflow just enough access to push to the public repo’s Pages branch, without exposing the private repo’s own contents.</p>
+<p><strong>Making every pull request a rendered preview automatically.</strong> The CI workflow branches on trigger type: a push to <code>main</code> builds with production settings and publishes to the public repo’s root; a pull-request event builds with <code>SITE_PREVIEW=true</code> and a per-PR base path (<code>/previews/pr-N/</code>), publishes to that specific unlisted subpath, and posts the resulting preview URL back as a comment on the PR itself. Preview pages carry a <code>noindex</code> meta tag so they’re technically public but not meant to be found or indexed. Closing the PR triggers a cleanup job that removes that PR’s preview subtree entirely, so stale previews don’t accumulate indefinitely on the public host.</p>
+<p><strong>Treating a green CI check as necessary, not sufficient.</strong> GitHub Actions reporting a successful workflow run doesn’t, by itself, prove the public page is live and correct — GitHub Pages deployment is a separate layer that can genuinely lag behind a green Actions run, and a build can succeed while still containing stale or incorrect content if a step was misconfigured. The verification discipline settled on was to always independently fetch the actual production URL, article URL, and any relevant image assets after a publish, and separately fetch the actual preview URL after a PR update — checking real HTTP status codes and real page content, not just trusting the Actions log. This caught real problems in practice: on one early PR, newly added image assets initially returned a stale cached 404 immediately after deployment and needed a second, deliberate fetch to confirm they’d actually landed.</p>
+<p><strong>Proving the full loop before trusting it.</strong> The very first real article PR was used specifically to validate the entire draft → phone-reviewable preview → merge → publish path end to end, rather than assuming the pieces would compose correctly just because each individually worked. Both the production Action and the separate public Pages deployment were independently confirmed to succeed, and the live article was fetched and read at its real public URL before the workflow was trusted for routine use.</p>
+<p><strong>Building in intentional friction against accidental exposure.</strong> Because the whole point was previewing without publishing, unrelated safety properties were treated as first-class requirements alongside “does the preview render”: confirming a closed PR’s preview path returns a real 404 rather than lingering, confirming production genuinely omits anything still marked as a draft, and confirming an editorial-backlog page meant to be preview-only is absent from the production build entirely. These became routine parts of verifying any PR, not a one-off check done only when the system was first built.</p>
+<h2>Result</h2>
+<p>The finished system let articles be drafted entirely in a private repository, reviewed as fully rendered, mobile-friendly web pages via automatically generated and automatically commented PR preview links, and published with one explicit merge action — all on GitHub Free, with no paid plan and no exposure of the private source repository’s contents. The split-repository pattern (private source, public generated output, scoped deploy key) turned out to be the entire solution to what initially looked like a hosting-tier limitation.</p>
+<h2>What we would do next</h2>
+<p>The pattern generalises beyond this one notebook: any other private-source, public-output publishing project facing the same GitHub Free Pages restriction can reuse the identical split-repository-plus-scoped-deploy-key architecture without modification. The remaining operational discipline worth carrying forward is the verification habit itself — always independently fetching real URLs after a workflow reports success, rather than trusting a green check alone, since the two things this project cared about (CI succeeded, and the public page is actually correct) are genuinely separate claims that can diverge.</p>
+</div>
+
+  
+    <aside class="connections resources">
+      <h2>References and resources</h2>
+      <ul>
+        
+          <li>
+            <a href="https://docs.github.com/en/pages">GitHub Pages</a>
+            <strong> · Documentation</strong>
+            <br><span>The hosting mechanism this project needed, which GitHub Free withholds from private repositories.</span>
+          </li>
+        
+          <li>
+            <a href="https://github.com/peaceiris/actions-gh-pages">peaceiris/actions-gh-pages</a>
+            <strong> · Source repository</strong>
+            <br><span>The GitHub Action used to push generated site output to the separate public repository over a scoped deploy key.</span>
+          </li>
+        
+      </ul>
+    </aside>
+  
+
+  
+  
+    <aside class="connections">
+      <h2>Related notes</h2>
+      <ul>
+        <li><a href="/previews/pr-18/notes/notebook-workflow/">Building an approval-gated lab notebook with GitHub Actions</a></li><li><a href="/previews/pr-18/notes/local-failover-orphan-process/">Local-model failover and the orphan-process bug</a></li><li><a href="/previews/pr-18/notes/layered-physical-recovery-button-pusher-jetkvm/">Layered physical recovery with a servo button-presser and JetKVM</a></li><li><a href="/previews/pr-18/notes/rescuing-old-sonoff-basics/">Rescuing old Sonoff Basics with Tasmota and ESPHome</a></li>
+      </ul>
+    </aside>
+  
+
+  
+  
+</article>
+</main>
+    <footer>Built from Markdown. No trackers, adverts or algorithmic nonsense.</footer>
+  </body>
+</html>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 460" role="img" aria-labelledby="t d"><title id="t">Layered physical recovery: servo button-presser and JetKVM</title><desc id="d">Two independent hardware layers restore a locked-up PC when software wake mechanisms fail: a servo pressing the physical power button, and a KVM providing a full remote screen/keyboard/mouse.</desc><rect width="960" height="460" rx="28" fill="#f7f3ea"/><g font-family="system-ui,sans-serif" text-anchor="middle">
+<text x="480" y="48" font-size="25" font-weight="700" fill="#17233d">When wake-on-LAN isn't enough</text>
+<rect x="80" y="90" width="360" height="100" rx="16" fill="#a86b2e"/><text x="260" y="128" font-size="18" font-weight="700" fill="white">Layer 1: Servo button-presser</text><text x="260" y="155" font-size="13" fill="white">Arduino + SG90 servo physically presses the power button</text>
+<rect x="520" y="90" width="360" height="100" rx="16" fill="#2f5d8a"/><text x="700" y="128" font-size="18" font-weight="700" fill="white">Layer 2: JetKVM</text><text x="700" y="155" font-size="13" fill="white">full remote screen/keyboard/mouse, even into BIOS</text>
+<path d="M260 190v50h440v40" stroke="#64748b" stroke-width="4" fill="none"/>
+<path d="M700 190v90" stroke="#64748b" stroke-width="4" fill="none"/>
+<rect x="330" y="280" width="300" height="80" rx="16" fill="#17233d"/><text x="480" y="315" font-size="18" font-weight="700" fill="white">Locked-up or powered-off PC</text><text x="480" y="340" font-size="13" fill="white">no working WoL, no SSH, no console access</text>
+<text x="480" y="410" font-size="17" font-weight="700" fill="#3f7d5c">Power on physically first, then take full remote control</text>
+</g></svg>

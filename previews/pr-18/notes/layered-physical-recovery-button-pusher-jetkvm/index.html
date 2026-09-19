@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Layered physical recovery with a servo button-presser and JetKVM · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <link rel="stylesheet" href="/previews/pr-18/assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/previews/pr-18/">Phil &amp; Tiggy&#39;s Lab Notes</a>
+      <nav aria-label="Main navigation">
+        <a href="/previews/pr-18/topics/">Topics</a>
+        <a href="/previews/pr-18/search/">Search</a>
+        <a href="/previews/pr-18/about/">About</a>
+      </nav>
+    </header>
+    <main data-pagefind-body><article class="note">
+  <h1>Layered physical recovery with a servo button-presser and JetKVM</h1>
+  
+  <p class="eyebrow project-period">Project period · <time datetime="2026-07-08T00:00:00.000Z">July-August 2026</time></p>
+  <p class="standfirst">When software wake mechanisms couldn&#39;t reliably bring a PC back after shutdown, two independent hardware layers, a servo pressing the physical power button and a JetKVM giving full remote screen/keyboard/mouse, filled the gap without adding a single point of failure.</p>
+  
+    <ul class="topic-chips" aria-label="Topics">
+      <li><a href="/previews/pr-18/topics/hardware-reuse/">Hardware Reuse</a></li><li><a href="/previews/pr-18/topics/reliability/">Reliability</a></li><li><a href="/previews/pr-18/topics/home-lab/">Home Lab</a></li><li><a href="/previews/pr-18/topics/automation/">Automation</a></li>
+    </ul>
+  
+  <div class="prose"><h2>In brief</h2>
+<ul>
+<li>Wake-on-LAN worked reliably from a Windows shutdown but stayed stubbornly unreliable from an Ubuntu shutdown on the same PC, despite several genuine fixes.</li>
+<li>A simple Arduino-plus-micro-servo rig, clamped over a laptop’s physical power button, gave a software-independent way to turn a machine on regardless of its OS or network state.</li>
+<li>A separate JetKVM device gave full remote screen, keyboard, mouse and even BIOS access, letting recovery continue past the power-on moment into actually diagnosing and fixing a stuck boot.</li>
+<li>Getting the servo to work reliably needed real hardware debugging, capacitor filtering, serial-port double-open bugs, and manual angle tuning, not just “wire it up and it works.”</li>
+<li>The two layers are deliberately independent: JetKVM’s own power controls are treated as unused/unapproved by default, so the servo remains a working fallback even if JetKVM’s own automation permissions are restricted.</li>
+</ul>
+<figure class="article-figure"><img src="/previews/pr-18/assets/diagrams/layered-physical-recovery.svg" alt="Diagram of two independent recovery layers, a servo pressing the physical power button and a JetKVM giving full remote screen/keyboard/mouse" loading="lazy" decoding="async"><figcaption>Physical power-on came first; full remote control picked up from there.</figcaption></figure>
+<h2>Question</h2>
+<p>Modern remote-recovery options — wake-on-LAN, remote power management, cloud-based out-of-band tools — all assume something on the machine or network is still cooperating. What happens when a home-lab PC is simply off, or locked in a state where none of the software wake paths work? Two related problems on the same Ryzen PC made this concrete: Ubuntu-initiated shutdown left wake-on-LAN unreliable even after fixing standby power, Netplan WoL configuration, PCIe wake settings, disabling Energy-Efficient Ethernet, and setting the BIOS “Restore AC Power Loss” option to Power On. If all of that still didn’t guarantee a wake, the real fix needed to not depend on the OS being cooperative at all — a genuinely physical path to pressing the power button.</p>
+<h2>Setup</h2>
+<p>The initial build target was a laptop, using an ATmega168-based Arduino board connected over FTDI USB serial, driving a small SG90 micro-servo through a signal pin on an expansion shield. A separate, unrelated device, a JetKVM IP-KVM unit, was already deployed on the LAN for another PC needing full remote screen/keyboard/mouse access, including into BIOS.</p>
+<h2>What we tried</h2>
+<p><strong>Building the simplest possible physical actuator.</strong> Rather than anything elaborate, the design was a servo horn clamped to physically press a laptop’s power button on command, controlled over serial from a simple sketch listening for single-character commands (<code>P</code> for press, <code>R</code>/<code>U</code> for rest, <code>D</code> for hold-down, <code>T</code> for a test double-press).</p>
+<p><strong>Real hardware debugging, not just wiring.</strong> The servo initially jittered and caused what looked like intermittent resets; adding a 1000µF capacitor across the servo’s 5V/GND rails smoothed this out completely, confirmed by a clean continuous-sweep test before returning to the actual button-press sketch. A first attempted <code>press</code> command appeared to succeed (the control script reported success) but produced no physical movement; diagnosis, using a bare Python <code>pyserial</code> session to watch the raw serial exchange, found the Arduino did print <code>READY</code>, receive <code>P</code>, and reply <code>PRESS</code> — proving the command path worked — but the higher-level shell script was opening the serial port twice (once via <code>stty</code>, once via redirection), causing a reset right as the command was sent. The actual fix needed two iterations: first keeping one file descriptor open throughout, then discovering the port was still being closed too quickly after sending, interrupting the servo mid-motion; the working fix held the port open for several seconds after each command depending on which command was sent.</p>
+<p><strong>Mechanical tuning as a distinct, separate problem from the electronics.</strong> Even once command delivery was proven reliable, the physical press direction was initially backwards — moving away from the button rather than into it — and had to be corrected by swapping which angle counted as rest versus press. Getting a reliable physical press then took iterative small adjustments to the exact press angle and to the physical mounting position of the servo horn, with the button only reliably triggering once both the software angle and the hardware mounting were dialled in together; success was ultimately confirmed by watching the target machine actually begin booting.</p>
+<p><strong>Naming and discoverability, not just function.</strong> Because the finished tool was useful but easy to misidentify later (it initially got looked up as if it might be a Home Assistant entity), a canonical phrase (“laptop button pusher”) and known aliases were explicitly agreed and documented, along with a durable reminder to also mention JetKVM’s presence whenever the button-pusher is invoked, since the two tools are complementary.</p>
+<p><strong>Extending the same tool to a second target.</strong> When wake-on-LAN proved unreliable specifically for the Ubuntu-side shutdown of a different PC, the same servo-button-presser concept was identified as a candidate physical recovery option for that machine too, alongside JetKVM’s own power controls and a deeper BIOS/OS wake-setting audit — explicitly kept as parked options rather than force-fitted immediately, since the priority was proving the concept once, not deploying it everywhere at once.</p>
+<p><strong>Deliberately layered, not merged, safety boundaries.</strong> JetKVM itself exposes keyboard, mouse, virtual-media, power, USB-emulation, reboot and wake-on-LAN tools through its own automation interface, but power/reboot/WoL-class actions were explicitly scoped as not-yet-approved for automated use, with only screenshot/read-only access approved by default. This kept the servo button-presser as a genuinely independent recovery layer: even if JetKVM’s own power automation were restricted or malfunctioning, physical power-on didn’t depend on it, and once a machine was powered on, JetKVM still provided the full remote screen/keyboard/mouse access needed to actually see what was happening and intervene, including reaching BIOS setup directly when needed.</p>
+<h2>Result</h2>
+<p>The servo button-presser reliably powered on its original laptop target on command, proven by watching it actually begin booting after a single <code>press</code> command, with the full serial command path (single held-open connection, correct hold timing per command, corrected press angle and horn position) verified working end to end. JetKVM was separately proven for BIOS-level access on the Ryzen PC, used to inspect and adjust real BIOS settings (including the AC-power-restore setting relevant to wake reliability) without a keyboard/monitor physically attached to that machine. Together, the two tools gave a working answer to “the PC won’t come back and nothing software-based is helping”: press the button physically first, then take full remote control once it’s powered on.</p>
+<h2>What we would do next</h2>
+<p>The most direct follow-up is adapting the proven servo mechanism to the Ryzen PC specifically, since its Ubuntu-shutdown WoL problem was the concrete trigger for treating physical recovery as a real requirement rather than a novelty project. A second is deciding, deliberately rather than by default, whether JetKVM’s own power/reboot/WoL automation should ever be approved for unattended use, given that the servo already provides an independent, lower-privilege path to the same physical outcome.</p>
+</div>
+
+  
+    <aside class="connections resources">
+      <h2>References and resources</h2>
+      <ul>
+        
+          <li>
+            <a href="https://github.com/arduino/arduino-cli">arduino-cli</a>
+            <strong> · Documentation</strong>
+            <br><span>The command-line toolchain used to compile and flash the servo-control sketch without the full Arduino IDE.</span>
+          </li>
+        
+          <li>
+            <a href="https://jetkvm.com/">JetKVM</a>
+            <strong> · Documentation</strong>
+            <br><span>The open-source IP-KVM device providing full remote screen/keyboard/mouse/BIOS access.</span>
+          </li>
+        
+      </ul>
+    </aside>
+  
+
+  
+  
+    <aside class="connections">
+      <h2>Related notes</h2>
+      <ul>
+        <li><a href="/previews/pr-18/notes/local-failover-orphan-process/">Local-model failover and the orphan-process bug</a></li><li><a href="/previews/pr-18/notes/direct-rtsp-versus-transcoding/">Direct RTSP versus transcoding</a></li><li><a href="/previews/pr-18/notes/rescuing-old-sonoff-basics/">Rescuing old Sonoff Basics with Tasmota and ESPHome</a></li><li><a href="/previews/pr-18/notes/notebook-workflow/">Building an approval-gated lab notebook with GitHub Actions</a></li>
+      </ul>
+    </aside>
+  
+
+  
+  
+</article>
+</main>
+    <footer>Built from Markdown. No trackers, adverts or algorithmic nonsense.</footer>
+  </body>
+</html>

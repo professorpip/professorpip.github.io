@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Building an approval-gated lab notebook with GitHub Actions · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <link rel="stylesheet" href="/previews/pr-18/assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/previews/pr-18/">Phil &amp; Tiggy&#39;s Lab Notes</a>
+      <nav aria-label="Main navigation">
+        <a href="/previews/pr-18/topics/">Topics</a>
+        <a href="/previews/pr-18/search/">Search</a>
+        <a href="/previews/pr-18/about/">About</a>
+      </nav>
+    </header>
+    <main data-pagefind-body><article class="note">
+  <h1>Building an approval-gated lab notebook with GitHub Actions</h1>
+  
+  <p class="eyebrow project-period">Project period · <time datetime="2026-09-12T00:00:00.000Z">September 2026</time></p>
+  <p class="standfirst">How private Markdown, phone-friendly previews and a separate public output repository made one reviewed merge the publication gate.</p>
+  
+    <ul class="topic-chips" aria-label="Topics">
+      <li><a href="/previews/pr-18/topics/publishing/">Publishing</a></li><li><a href="/previews/pr-18/topics/github/">Github</a></li><li><a href="/previews/pr-18/topics/automation/">Automation</a></li><li><a href="/previews/pr-18/topics/eleventy/">Eleventy</a></li><li><a href="/previews/pr-18/topics/agent-architecture/">Agent Architecture</a></li>
+    </ul>
+  
+  <div class="prose"><h2>In brief</h2>
+<ul>
+<li>Drafts, evidence and editorial planning stay in a private source repository; only generated files enter the public site repository.</li>
+<li>Every pull request gets an unlisted, <code>noindex</code> rendered preview for phone review.</li>
+<li>Merging that exact pull request is the human publication decision.</li>
+<li>GitHub Actions rebuilds the approved source, publishes it through GitHub Pages and removes the closed preview.</li>
+<li>The first six pull requests proved the loop; later batches expanded the same method to twenty public notes.</li>
+</ul>
+<p>Tiggy is an OpenClaw agent that can reconstruct projects, draft Markdown and run build checks. The design problem was not automatic writing; it was how to keep evidence and drafts private, let Phil judge the rendered result on a phone, and require one explicit human decision before anything became public.</p>
+<figure class="article-figure"><img src="/previews/pr-18/assets/diagrams/one-tap-lab-notebook-workflow.svg" alt="Architecture diagram showing Tiggy preparing evidence and Markdown in a private source branch, GitHub Actions validating it and publishing an unlisted noindex preview for Phil&#39;s phone review, then an approved merge producing the public site from a separate generated-output repository while a closed pull request removes its preview" loading="lazy" decoding="async"><figcaption>Private source stays on the left of the publication boundary. Only generated preview or production files cross into the public Pages repository.</figcaption></figure>
+<h2>Why two repositories?</h2>
+<p>A hosted CMS would add another account, database and maintenance job. A public source repository would expose drafts, editorial planning and revision history. GitHub Free could not publish Pages directly from the private source repository.</p>
+<p>We split the system:</p>
+<ol>
+<li>The <strong>private repository</strong> holds Markdown, templates, evidence-led revisions, automation and the editorial backlog.</li>
+<li>The <strong>public repository</strong> holds only generated HTML, CSS, images and the Pagefind search index.</li>
+</ol>
+<p>The private repository’s workflow has a deploy key that can write to the public one. Access does not flow back the other way. This keeps the workshop private while leaving the finished site cheap and static.</p>
+<h2>The working loop</h2>
+<p>Drafting is deliberately three-pass: write the full evidence-backed version; challenge every paragraph, sentence and word until only useful detail remains; then add no more than five bullets that give a time-poor reader the whole gist.</p>
+<p>For each article:</p>
+<ol>
+<li>Tiggy reconstructs the project from preserved artefacts, using memory and transcripts only to locate evidence. Private operational details are removed or generalised.</li>
+<li>The article goes onto its own branch. A production-shaped build and a prefixed preview build both run Eleventy, Pagefind and the internal link-and-image checker.</li>
+<li>A pull request repeats the preview checks in GitHub Actions, publishes generated files beneath <code>/previews/pr-N/</code>, and comments the URL.</li>
+<li>Phil reviews that rendered page on his phone. Requested edits repeat the same loop.</li>
+<li>Merging the approved PR triggers a fresh production build and writes the result to the public Pages repository.</li>
+<li>We fetch the live article and assets. Closing the PR also removes its preview, which should then return <code>404</code>.</li>
+</ol>
+<p>Preview pages are public but unlisted and carry <code>noindex, nofollow</code>. That is useful review plumbing, not access control, so sensitive material never enters a preview.</p>
+<p>An article can be <code>draft: false</code> on its branch without appearing in production: it is ready <em>within the proposal</em>, but production still comes only from <code>main</code>. The merge remains the explicit human gate.</p>
+<h2>We built it by using it</h2>
+<p>The repository history shows the useful progression.</p>
+<ul>
+<li><strong>PRs 1 and 2 proved the basic loop.</strong> The first articles—<a href="/previews/pr-18/notes/live-voice-tiggy-iphone/">giving Tiggy a live voice</a> and <a href="/previews/pr-18/notes/what-is-tiggy/" class="wiki-link">what Tiggy is</a>—were reviewed through GitHub and published by merging. It worked, but reviewing Markdown under <strong>Files changed</strong> was a poor way to judge a page on a phone.</li>
+<li><strong>PR 3 added rendered previews.</strong> It used its own preview as the first end-to-end test, while also adding topic pages, wiki links, backlinks, related notes, Pagefind search and broken-link checks.</li>
+<li><strong>PR 4 proved private planning.</strong> The roughly eighty-item editorial backlog renders only when <code>SITE_PREVIEW=true</code>; production deliberately omits <code>/editorial/</code>.</li>
+<li><strong>PRs 5 and 6 tightened the editorial method.</strong> The GCSE benchmark and Sonoff rescue notes were reconstructed from project evidence, given honest project periods, supported by verified primary resources and limited to useful visuals. Those rules were then captured in a reusable publishing skill.</li>
+</ul>
+<p>The first two PRs tested publication. The next four tested the publishing system itself.</p>
+<h2>Small choices that mattered</h2>
+<ul>
+<li><strong>Project time and publication time are separate.</strong> <code>projectDate</code> controls ordering; <code>projectPeriod</code> is shown to readers; <code>date</code> remains publication metadata.</li>
+<li><strong>Wiki links stay lightweight.</strong> A canonical <code>wikiSlug</code> points to an article; other keywords fall back to topic pages. No graph database is involved.</li>
+<li><strong>Preview paths are real test cases.</strong> Running beneath <code>/previews/pr-N/</code> catches asset and navigation mistakes hidden by root-only local builds.</li>
+<li><strong>A green source Action is not publication proof.</strong> The public repository has its own Pages deployment, so the final check is the URL a reader can fetch.</li>
+</ul>
+<p>Those first six pull requests established the workflow. Later ordered batches used the same gate to expand the public notebook to twenty notes while keeping closed previews and the editorial backlog out of production.</p>
+<p>The result is deliberately boring infrastructure: Markdown, Git, static files and one human decision. That is the good kind of <a href="/previews/pr-18/topics/automation/" class="wiki-link">automation</a>.</p>
+</div>
+
+  
+    <aside class="connections resources">
+      <h2>References and resources</h2>
+      <ul>
+        
+          <li>
+            <a href="https://www.11ty.dev/docs/">Eleventy documentation</a>
+            <strong> · Official documentation</strong>
+            <br><span>The static-site generator used to turn private Markdown and Nunjucks templates into the public notebook.</span>
+          </li>
+        
+          <li>
+            <a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/reviewing-changes-in-pull-requests">Reviewing proposed changes in a pull request</a>
+            <strong> · GitHub documentation</strong>
+            <br><span>GitHub&#39;s review model, which provides the human approval surface without introducing a separate CMS.</span>
+          </li>
+        
+          <li>
+            <a href="https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request">Events that trigger workflows</a>
+            <strong> · GitHub Actions documentation</strong>
+            <br><span>Reference for the pull-request and push events behind previews, cleanup and production publishing.</span>
+          </li>
+        
+          <li>
+            <a href="https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site">Configuring a publishing source for GitHub Pages</a>
+            <strong> · GitHub Pages documentation</strong>
+            <br><span>The Pages branch model used by the separate generated-output repository.</span>
+          </li>
+        
+          <li>
+            <a href="https://github.com/peaceiris/actions-gh-pages">actions-gh-pages</a>
+            <strong> · Open-source action</strong>
+            <br><span>The deployment action that writes built preview and production files to the public Pages repository.</span>
+          </li>
+        
+          <li>
+            <a href="https://pagefind.app/docs/">Pagefind documentation</a>
+            <strong> · Official documentation</strong>
+            <br><span>The static search index used without a hosted search service or application database.</span>
+          </li>
+        
+      </ul>
+    </aside>
+  
+
+  
+  
+    <aside class="connections">
+      <h2>Related notes</h2>
+      <ul>
+        <li><a href="/previews/pr-18/notes/rendered-pr-previews-github-free/">Rendered pull-request previews on GitHub Free</a></li><li><a href="/previews/pr-18/notes/local-failover-orphan-process/">Local-model failover and the orphan-process bug</a></li><li><a href="/previews/pr-18/notes/system-versus-model-native-duplex/">System duplex versus model-native duplex for an AI voice assistant</a></li><li><a href="/previews/pr-18/notes/can-a-local-agent-do-real-work/">Can a local AI agent harness do real work?</a></li>
+      </ul>
+    </aside>
+  
+
+  
+  
+</article>
+</main>
+    <footer>Built from Markdown. No trackers, adverts or algorithmic nonsense.</footer>
+  </body>
+</html>

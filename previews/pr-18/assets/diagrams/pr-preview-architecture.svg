@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" role="img" aria-labelledby="t d"><title id="t">Rendered PR previews on GitHub Free for a private repository</title><desc id="d">GitHub Actions builds a private repo's pull requests and publishes an unlisted noindex preview to a separate public Pages repository, while production only builds from the main branch.</desc><rect width="960" height="420" rx="28" fill="#f7f3ea"/><g font-family="system-ui,sans-serif" text-anchor="middle">
+<text x="480" y="46" font-size="24" font-weight="700" fill="#17233d">One private source, one public output repo</text>
+<rect x="80" y="86" width="330" height="90" rx="16" fill="#17233d"/><text x="245" y="120" font-size="17" font-weight="700" fill="white">Private source repo</text><text x="245" y="146" font-size="13" fill="white">GitHub Free — no Pages available here</text>
+<rect x="550" y="86" width="330" height="90" rx="16" fill="#3f7d5c"/><text x="715" y="120" font-size="17" font-weight="700" fill="white">Public generated-site repo</text><text x="715" y="146" font-size="13" fill="white">professorpip.github.io — Pages enabled</text>
+<path d="M245 176v40h470v40" stroke="#64748b" stroke-width="4" fill="none"/>
+<rect x="330" y="256" width="300" height="70" rx="16" fill="#a86b2e"/><text x="480" y="288" font-size="17" font-weight="700" fill="white">PR build → /previews/pr-N/</text><text x="480" y="310" font-size="12" fill="white">unlisted, noindex, deleted on PR close</text>
+<path d="M480 326v40" stroke="#64748b" stroke-width="4" fill="none"/>
+<text x="480" y="392" font-size="16" font-weight="700" fill="#17233d">main push → production root; closed PR preview returns 404</text>
+</g></svg>
