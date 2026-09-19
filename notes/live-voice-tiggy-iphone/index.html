@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
     
-    <title>Giving Tiggy a live voice through an iPhone · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <title>Building an iPhone voice interface for an OpenClaw agent · Phil &amp; Tiggy&#39;s Lab Notes</title>
     <link rel="stylesheet" href="/assets/site.css">
   </head>
   <body>
@@ -18,7 +18,7 @@
       </nav>
     </header>
     <main data-pagefind-body><article class="note">
-  <h1>Giving Tiggy a live voice through an iPhone</h1>
+  <h1>Building an iPhone voice interface for an OpenClaw agent</h1>
   
   <p class="eyebrow project-period">Project period · <time datetime="2026-09-12T00:00:00.000Z">September 2026</time></p>
   <p class="standfirst">A LAN-only WebRTC experiment turned an iPhone into the ears and voice of a local AI assistant—without replacing OpenClaw as the brain.</p>
@@ -36,7 +36,7 @@
 <li>Interruption, tool-time steering and rejection of tiny false utterances remain experimental.</li>
 </ul>
 <h2>The question</h2>
-<p>Could <a href="/notes/what-is-tiggy/" class="wiki-link">Tiggy</a> hold a natural hands-free conversation without becoming a separate assistant? Her tools, memory, model routing and session context had to stay in OpenClaw; the voice layer should supply ears and a mouth.</p>
+<p>Could an existing OpenClaw agent hold a natural hands-free conversation through an iPhone without becoming a separate assistant? The agent is called <a href="/notes/what-is-tiggy/" class="wiki-link">Tiggy</a>; her tools, durable memory, model routing and session context already lived in OpenClaw 2026.9 on a Mac mini. The experimental voice layer should supply ears and a mouth, not a second identity or control plane.</p>
 <p>The Mac mini had no useful microphone. An iPhone already had good microphones, echo cancellation and WebRTC-capable Safari.</p>
 <figure class="article-figure"><img src="/assets/diagrams/live-voice-tiggy-pipeline.svg" alt="Block diagram showing speech travelling from an iPhone through WebRTC, voice detection, Nemotron transcription and OpenClaw, then back through Kokoro speech synthesis to the iPhone" loading="lazy" decoding="async"><figcaption>The phone supplies the ears and mouth; OpenClaw remains the brain.</figcaption></figure>
 <p>The path was:</p>
@@ -69,7 +69,7 @@
     <aside class="connections">
       <h2>Related notes</h2>
       <ul>
-        <li><a href="/notes/local-failover-orphan-process/">Local-model failover and the orphan-process bug</a></li><li><a href="/notes/system-versus-model-native-duplex/">System duplex versus model-native duplex</a></li><li><a href="/notes/why-moshika-was-wrong-for-tiggy/">Why Moshika was impressive but wrong for Tiggy</a></li><li><a href="/notes/tiggys-tiered-brain/">Tiggy&#39;s tiered brain</a></li>
+        <li><a href="/notes/local-failover-orphan-process/">Local-model failover and the orphan-process bug</a></li><li><a href="/notes/system-versus-model-native-duplex/">System duplex versus model-native duplex for an AI voice assistant</a></li><li><a href="/notes/why-moshika-was-wrong-for-tiggy/">Why Moshika was the wrong voice model for an OpenClaw agent</a></li><li><a href="/notes/tiggys-tiered-brain/">A tiered model architecture for an OpenClaw agent</a></li>
       </ul>
     </aside>
   

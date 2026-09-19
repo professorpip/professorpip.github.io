@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
     
-    <title>Why Moshika was impressive but wrong for Tiggy · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <title>Why Moshika was the wrong voice model for an OpenClaw agent · Phil &amp; Tiggy&#39;s Lab Notes</title>
     <link rel="stylesheet" href="/assets/site.css">
   </head>
   <body>
@@ -18,7 +18,7 @@
       </nav>
     </header>
     <main data-pagefind-body><article class="note">
-  <h1>Why Moshika was impressive but wrong for Tiggy</h1>
+  <h1>Why Moshika was the wrong voice model for an OpenClaw agent</h1>
   
   <p class="eyebrow project-period">Project period · <time datetime="2026-09-12T00:00:00.000Z">September 2026</time></p>
   <p class="standfirst">A 135 ms speech model proved local full duplex, but weak interruption control and the wrong text seam outweighed its speed.</p>
@@ -35,7 +35,7 @@
 <li>Its text stream was assistant inner monologue, not a clean user transcript for steering OpenClaw.</li>
 <li>Low latency was valuable evidence, but control and integration decided the architecture.</li>
 </ul>
-<p>Moshika made the most convincing first impression of the voice experiments. It spoke almost immediately and treated conversation as one continuous audio stream. That still did not make it the right voice for Tiggy.</p>
+<p><strong>Moshika</strong> is Kyutai’s quantised MLX implementation of the Moshi full-duplex speech model. We tested it as a possible local voice layer for Tiggy, an existing OpenClaw agent whose memory, tools and permissions needed to remain in OpenClaw. Moshika made the most convincing first impression of the voice experiments: it spoke almost immediately and treated conversation as one continuous audio stream. That still did not make it the right integration.</p>
 <figure class="article-figure"><img src="/assets/diagrams/moshika-verdict.svg" alt="A balance comparing Moshika&#39;s excellent latency and duplex mechanics with weak deterministic control and integration seams" loading="lazy" decoding="async"><figcaption>Latency won the demo; control determined the product decision.</figcaption></figure>
 <h2>What worked</h2>
 <p>The official MLX stack loaded a 4.9 GB model cache and used roughly <strong>5.4 GB</strong> of physical memory. A 20-second unpaced duplex stream completed in <strong>16.17 seconds</strong>, a real-time factor of <strong>0.81</strong>. First audio arrived after <strong>135 ms</strong> while OpenClaw’s Gateway remained healthy.</p>
@@ -75,7 +75,7 @@
     <aside class="connections">
       <h2>Related notes</h2>
       <ul>
-        <li><a href="/notes/live-voice-tiggy-iphone/">Giving Tiggy a live voice through an iPhone</a></li><li><a href="/notes/system-versus-model-native-duplex/">System duplex versus model-native duplex</a></li><li><a href="/notes/can-a-local-agent-do-real-work/">Can a local agent do real work?</a></li><li><a href="/notes/building-gcse-local-llm-benchmark/">Building a GCSE benchmark for local LLMs</a></li>
+        <li><a href="/notes/live-voice-tiggy-iphone/">Building an iPhone voice interface for an OpenClaw agent</a></li><li><a href="/notes/system-versus-model-native-duplex/">System duplex versus model-native duplex for an AI voice assistant</a></li><li><a href="/notes/can-a-local-agent-do-real-work/">Can a local AI agent harness do real work?</a></li><li><a href="/notes/building-gcse-local-llm-benchmark/">Building a GCSE benchmark for local LLMs</a></li>
       </ul>
     </aside>
   

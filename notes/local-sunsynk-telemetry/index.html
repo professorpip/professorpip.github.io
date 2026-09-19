@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
     
-    <title>Local Sunsynk telemetry without the cloud · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <title>Local SunSynk telemetry without the cloud · Phil &amp; Tiggy&#39;s Lab Notes</title>
     <link rel="stylesheet" href="/assets/site.css">
   </head>
   <body>
@@ -18,7 +18,7 @@
       </nav>
     </header>
     <main data-pagefind-body><article class="note">
-  <h1>Local Sunsynk telemetry without the cloud</h1>
+  <h1>Local SunSynk telemetry without the cloud</h1>
   
   <p class="eyebrow project-period">Project period · <time datetime="2026-08-30T00:00:00.000Z">August–September 2026</time></p>
   <p class="standfirst">A Raspberry Pi turned the inverter&#39;s RS-485 port into a local Modbus TCP feed for Home Assistant.</p>
@@ -35,7 +35,9 @@
 <li><code>mbusd</code> exposed the serial bus as Modbus TCP; a Home Assistant add-on read 72 configured sensors.</li>
 <li>The dashboard kept cloud and local entities visibly separate for comparison.</li>
 </ul>
-<p>The inverter already had telemetry in an app. We wanted a local path whose latency, availability and evidence did not depend on the vendor cloud.</p>
+<p>The starting point was a <strong>SunSynk 3.6 kW single-phase low-voltage hybrid inverter</strong> with cloud telemetry already visible in the vendor app. We wanted a second, local path whose latency, availability and evidence did not depend on that cloud. A <strong>Raspberry Pi 3 Model B Rev 1.2</strong> running Debian 13 became the gateway: a CH340 USB-to-RS-485 adapter reached the inverter, <code>mbusd</code> exposed Modbus TCP, and Home Assistant consumed the readings.</p>
+<figure class="article-figure hardware-photo"><img src="/assets/images/hardware-sunsynk-3-6kw-hybrid.webp" alt="A white wall-mounted SunSynk 3.6 kW hybrid inverter with a small display and cable glands along its lower edge" loading="lazy" decoding="async"><figcaption>Representative official product image for SunSynk&#39;s 3.6 kW single-phase hybrid inverter class; the exact marketed SKU of the installed unit was not independently proved. <span class="figure-credit">Photo: <a href="https://www.sunsynk.org/products/single-phase-hybrid-inverters">SunSynk product image</a></span></figcaption></figure>
+<figure class="article-figure hardware-photo"><img src="/assets/images/hardware-raspberry-pi-3-model-b.webp" alt="A bare Raspberry Pi 3 Model B single-board computer showing its USB, Ethernet, HDMI and GPIO connections" loading="lazy" decoding="async"><figcaption>The local gateway is a Raspberry Pi 3 Model B Rev 1.2. <span class="figure-credit">Photo: <a href="https://commons.wikimedia.org/wiki/File:Raspberry_Pi_3_Model_B.jpg">JvA43 · CC0</a></span></figcaption></figure>
 <figure class="article-figure"><img src="/assets/diagrams/local-sunsynk.svg" alt="An inverter connects by RS-485 to a Raspberry Pi running mbusd, then by Modbus TCP to a Home Assistant add-on and MQTT entities" loading="lazy" decoding="async"><figcaption>Each stage was proved independently before the dashboard used the data.</figcaption></figure>
 <h2>Prove the wire first</h2>
 <p>The USB RS-485 adapter appeared as a CH340 serial device with a stable by-id path. Passive listens at several common baud rates captured nothing, which did not prove the A/B pair was reversed: Modbus RTU devices often remain silent until addressed.</p>

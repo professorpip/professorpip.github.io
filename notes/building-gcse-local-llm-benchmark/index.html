@@ -37,6 +37,9 @@
 </ul>
 <p>Short prompts made several local models look clever. We wanted to know whether a quantised model on a 16 GB consumer GPU could sustain useful reasoning across official British GCSE questions.</p>
 <p>This is an <a href="/topics/evaluation/" class="wiki-link">evaluation</a> benchmark, not a claim that an AI “passed its GCSEs”. Components were partial, some marks subjective, public papers may have appeared in training data, and speaking or practical assessment was absent.</p>
+<blockquote>
+<p><strong>Test platform, August–September 2026:</strong> AMD Ryzen 9 3950X, 64 GB system RAM and an NVIDIA GeForce RTX 5060 Ti with 16 GB VRAM. The same local endpoint and frozen question route were used within each controlled comparison; model quant, context and vision/runtime changes were recorded separately rather than treated as interchangeable.</p>
+</blockquote>
 <figure class="article-figure"><img src="/assets/diagrams/gcse-benchmark-evolution.svg" alt="Timeline showing the benchmark growing from an 84-mark text-friendly pilot through text-only, multimodal and exam-permitted-aid versions to a frozen 1,019-mark baseline" loading="lazy" decoding="async"><figcaption>The score barely moved after vision arrived; coverage and experimental discipline changed dramatically.</figcaption></figure>
 <h2>From flattering pilot to useful test</h2>
 <p>The first Dirk/Qwen3.8 27B run scored <strong>82/84 (97.6%)</strong> on selected Maths, Biology and Computer Science questions. It mainly proved the harness. Questions had been chosen because text extraction worked, excluding much of the visual and awkward material. A high score was evidence that the test was too friendly.</p>
@@ -212,7 +215,7 @@
     <aside class="connections">
       <h2>Related notes</h2>
       <ul>
-        <li><a href="/notes/16gb-vram-local-model-shootout/">The 16 GB VRAM local-model shootout</a></li><li><a href="/notes/why-moshika-was-wrong-for-tiggy/">Why Moshika was impressive but wrong for Tiggy</a></li><li><a href="/notes/can-a-local-agent-do-real-work/">Can a local agent do real work?</a></li><li><a href="/notes/live-voice-tiggy-iphone/">Giving Tiggy a live voice through an iPhone</a></li>
+        <li><a href="/notes/16gb-vram-local-model-shootout/">The 16 GB VRAM local-model shootout</a></li><li><a href="/notes/why-moshika-was-wrong-for-tiggy/">Why Moshika was the wrong voice model for an OpenClaw agent</a></li><li><a href="/notes/can-a-local-agent-do-real-work/">Can a local AI agent harness do real work?</a></li><li><a href="/notes/live-voice-tiggy-iphone/">Building an iPhone voice interface for an OpenClaw agent</a></li>
       </ul>
     </aside>
   

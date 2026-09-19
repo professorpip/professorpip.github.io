@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
     
-    <title>Can a local agent do real work? · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <title>Can a local AI agent harness do real work? · Phil &amp; Tiggy&#39;s Lab Notes</title>
     <link rel="stylesheet" href="/assets/site.css">
   </head>
   <body>
@@ -18,7 +18,7 @@
       </nav>
     </header>
     <main data-pagefind-body><article class="note">
-  <h1>Can a local agent do real work?</h1>
+  <h1>Can a local AI agent harness do real work?</h1>
   
   <p class="eyebrow project-period">Project period · <time datetime="2026-09-04T00:00:00.000Z">September 2026</time></p>
   <p class="standfirst">A constant-model harness bake-off showed that useful artefacts are not the same as verified completion.</p>
@@ -35,7 +35,7 @@
 <li>Pi even declared success after the external verifier had effectively failed.</li>
 <li>A local agent becomes useful when the harness makes verification part of “done”.</li>
 </ul>
-<p>A fluent answer proves little about an agent. We asked three harnesses to leave behind artefacts which an independent program could accept or reject.</p>
+<p>An <strong>agent harness</strong> wraps a language model with tools, working memory, execution rules and a definition of when work is complete. A fluent answer from the model proves little about that surrounding system. We held the model endpoint constant and asked three harnesses—Hermes Agent, DeepSeek Harness and Pi—to leave behind artefacts which an independent program could accept or reject.</p>
 <figure class="article-figure"><img src="/assets/diagrams/local-agent-work.svg" alt="Three agent harnesses feeding the same model and external verifier" loading="lazy" decoding="async"><figcaption>Holding the model constant isolates what the harness contributes to reliable work.</figcaption></figure>
 <h2>A fairer comparison</h2>
 <p>Every candidate used the same 32K Qwen-based endpoint. The tasks included an <code>openpyxl</code> exercise which required documentation lookup and a finance data-join task with exact output names and formats. Prompts, workspaces, logs and verifier results were preserved.</p>
@@ -82,7 +82,7 @@
     <aside class="connections">
       <h2>Related notes</h2>
       <ul>
-        <li><a href="/notes/installing-hermes-on-a-vm/">Installing Hermes on a VM</a></li><li><a href="/notes/why-moshika-was-wrong-for-tiggy/">Why Moshika was impressive but wrong for Tiggy</a></li><li><a href="/notes/giving-hermes-jobs-without-keys/">Giving Hermes jobs without giving it the keys</a></li><li><a href="/notes/building-gcse-local-llm-benchmark/">Building a GCSE benchmark for local LLMs</a></li>
+        <li><a href="/notes/installing-hermes-on-a-vm/">Running Hermes Agent in an isolated Ubuntu VM</a></li><li><a href="/notes/why-moshika-was-wrong-for-tiggy/">Why Moshika was the wrong voice model for an OpenClaw agent</a></li><li><a href="/notes/giving-hermes-jobs-without-keys/">Constrained delegation to a local Hermes agent</a></li><li><a href="/notes/building-gcse-local-llm-benchmark/">Building a GCSE benchmark for local LLMs</a></li>
       </ul>
     </aside>
   

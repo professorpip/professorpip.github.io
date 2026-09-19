@@ -35,7 +35,7 @@
 <li>Flipping the cameras in-device allowed normal main and sub streams to return to direct RTSP.</li>
 <li>Compatibility-only aliases may transcode; always-on recording paths should avoid it unless necessary.</li>
 </ul>
-<p>Adding cameras did not saturate the gigabit network. Re-encoding their video saturated the CPU.</p>
+<p>This system used <strong>Frigate</strong>, an open-source network video recorder running on an Unraid home server. Cameras supplied compressed RTSP feeds; <strong>go2rtc</strong> routed them to Frigate for detection and recording, with FFmpeg available only when a client needed a different format. Adding cameras did not saturate the gigabit network. Accidentally moving continuous software transcoding into the normal stream path saturated the CPU.</p>
 <figure class="article-figure"><img src="/assets/diagrams/rtsp-versus-transcode.svg" alt="A camera&#39;s compressed RTSP stream forks either into a direct restream or through a CPU-heavy decode, rotate and H.264 encode path" loading="lazy" decoding="async"><figcaption>A small transform becomes permanent compute when placed on every continuous stream.</figcaption></figure>
 <h2>How the cost crept in</h2>
 <p>Some small cameras were mounted upside down. The quick fix used go2rtc’s FFmpeg source with H.264 video and 180-degree rotation. It worked, and each camera still reported the expected frame rate.</p>
@@ -82,7 +82,7 @@
     <aside class="connections">
       <h2>Related notes</h2>
       <ul>
-        <li><a href="/notes/local-failover-orphan-process/">Local-model failover and the orphan-process bug</a></li><li><a href="/notes/health-check-broke-zigbee/">The health check that briefly broke Zigbee</a></li><li><a href="/notes/installing-hermes-on-a-vm/">Installing Hermes on a VM</a></li><li><a href="/notes/moving-zha-remote-coordinator/">Moving ZHA to a remote coordinator</a></li>
+        <li><a href="/notes/local-failover-orphan-process/">Local-model failover and the orphan-process bug</a></li><li><a href="/notes/health-check-broke-zigbee/">The health check that briefly broke Zigbee</a></li><li><a href="/notes/installing-hermes-on-a-vm/">Running Hermes Agent in an isolated Ubuntu VM</a></li><li><a href="/notes/moving-zha-remote-coordinator/">Moving ZHA to a remote coordinator</a></li>
       </ul>
     </aside>
   

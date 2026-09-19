@@ -35,7 +35,7 @@
 <li>A separate reaper now requires exact identity, healthy replacement, no client and two matching observations before sending <code>TERM</code>.</li>
 <li>Recovery tests must inspect resource lifecycle, not only whether requests succeed.</li>
 </ul>
-<p>The failover test looked successful: the main local endpoint was unavailable, the small Mac model started, and a response came back. Then the Gateway watchdog did its job—and exposed a second failure.</p>
+<p>OpenClaw’s <strong>Gateway</strong> is the long-running process that owns the agent session, provider connections and supervised local-model child processes. The normal local path used a wake-on-demand Ryzen GPU server; a smaller <code>llama.cpp</code> model on the Mac mini was the emergency fallback. The failover test looked successful: the Ryzen endpoint was unavailable, the Mac model started, and a response came back. Then an external watchdog replaced the Gateway—and exposed a second failure.</p>
 <figure class="article-figure"><img src="/assets/diagrams/failover-orphan.svg" alt="A Gateway starts an emergency model, is replaced by a watchdog, and leaves the model orphaned until a conservative reaper acts" loading="lazy" decoding="async"><figcaption>The request path recovered before the process lifecycle did.</figcaption></figure>
 <h2>Proving the happy path</h2>
 <p>The emergency Qwen server had its own provider, port and 600-second idle timer. Two cold starts reached readiness in about <strong>0.76 seconds</strong>. With the Ryzen path forced to miss its three-second deadline, the Mac fallback became ready in <strong>1.27 seconds</strong> and returned HTTP 200 in <strong>1.31 seconds</strong>.</p>
@@ -43,7 +43,7 @@
 <h2>The failure behind the success</h2>
 <p>We then paused the Gateway while its emergency child remained inside the idle window. The external watchdog replaced the Gateway, restoring service and Telegram. The old model process lost its parent and became adopted by PID 1. Its idle owner no longer existed, so the expected shutdown never arrived.</p>
 <p>Port health alone would have missed this. The new Gateway worked; the abandoned process still held memory.</p>
-<h2>A deliberately fussy reaper</h2>
+<h2>Conservative cleanup for orphaned model processes</h2>
 <p>The repair runs outside the Gateway every 15 seconds. It matches the exact binary, dedicated port, model alias and model file. It proceeds only when there is exactly one listener, the replacement Gateway is healthy, that Gateway is absent from the model’s ancestry, no client is connected, and the same model/Gateway pair appears twice. It sends <code>TERM</code>, rechecks, and reserves <code>KILL</code> for the unchanged exact process.</p>
 <p>In the controlled orphan test, the model became PPID 1. The reaper observed it, confirmed it on the next pass, sent <code>TERM</code>, and saw it exit one second later. In the normal test it ignored the Gateway-owned model, which stopped on its existing idle timer. A fresh cold start then succeeded.</p>
 <h2>Result</h2>
@@ -77,7 +77,7 @@
     <aside class="connections">
       <h2>Related notes</h2>
       <ul>
-        <li><a href="/notes/tiggys-tiered-brain/">Tiggy&#39;s tiered brain</a></li><li><a href="/notes/live-voice-tiggy-iphone/">Giving Tiggy a live voice through an iPhone</a></li><li><a href="/notes/notebook-workflow/">Building a one-tap lab notebook</a></li><li><a href="/notes/why-moshika-was-wrong-for-tiggy/">Why Moshika was impressive but wrong for Tiggy</a></li>
+        <li><a href="/notes/tiggys-tiered-brain/">A tiered model architecture for an OpenClaw agent</a></li><li><a href="/notes/live-voice-tiggy-iphone/">Building an iPhone voice interface for an OpenClaw agent</a></li><li><a href="/notes/notebook-workflow/">Building an approval-gated lab notebook with GitHub Actions</a></li><li><a href="/notes/why-moshika-was-wrong-for-tiggy/">Why Moshika was the wrong voice model for an OpenClaw agent</a></li>
       </ul>
     </aside>
   

@@ -36,11 +36,14 @@
 <li>Our sweet spot was the best verified behaviour with deliberate headroom, not the largest model that barely loaded.</li>
 </ul>
 <p>Model cards encourage a simple comparison: more parameters should mean more capability. A single 16 GB GPU turned that into a placement problem.</p>
+<blockquote>
+<p><strong>Test platform, August–September 2026:</strong> AMD Ryzen 9 3950X, 64 GB system RAM, PCIe-attached NVIDIA GeForce RTX 5060 Ti with 16 GB VRAM, and <code>llama.cpp</code>-family runtimes. Results below depend on quantisation, context length, KV-cache format and offload policy—not parameter count alone.</p>
+</blockquote>
 <figure class="article-figure"><img src="/assets/diagrams/vram-fit.svg" alt="A 16 GB VRAM budget divided between model weights, KV cache, runtime overhead and safety headroom" loading="lazy" decoding="async"><figcaption>The model file is only one claimant on the memory budget.</figcaption></figure>
 <h2>Dense and MoE are different bargains</h2>
 <p>A dense model uses all its weights for each token. A mixture-of-experts model activates only part of a larger network, so compute can be modest even when the total checkpoint is huge. The catch is storage: experts not currently active still need VRAM, system RAM or a trip across PCIe.</p>
 <p>That produced counter-intuitive results in our <a href="/notes/16gb-vram-local-model-shootout/" class="wiki-link">shootout</a>. A 30B-class MoE coding model generated above 120 tokens/s while a 26B Gemma MoE, loaded within a few hundred megabytes of the card limit, managed about 22–24. Architecture, quantisation and runtime support mattered as much as the headline size.</p>
-<h2>Context has a bill</h2>
+<h2>Context consumes VRAM too</h2>
 <p>Weights were not the whole budget. Longer context enlarged the KV cache; speculative decoding added draft state; expert caching traded RAM traffic for VRAM; the desktop and CUDA runtime needed space too.</p>
 <p>One 80K Qwen3.8 profile worked with about <strong>370 MiB</strong> free. It was technically successful and operationally brittle. A lower-bit profile left roughly <strong>3.2 GiB</strong> at the same context and ran faster, but sacrificed some quality. At 96K, another tuned 27B quant used about <strong>13.75 GB</strong> and passed five retrieval probes. That was a healthier engineering result than squeezing in a larger checkpoint and hoping traffic never spiked.</p>
 <p>Offload experiments reinforced the point. FreeToken measured roughly <strong>42.8 GB/s</strong> CPU memory bandwidth and <strong>14.1 GB/s</strong> host-to-device PCIe bandwidth on the Ryzen box. A cache miss therefore crossed a link far slower than local GPU memory. The runtime was interesting, but its first agent smoke test scored <strong>0/5 clean</strong> and exposed template, schema and context limits. Clever placement could not compensate for unreliable behaviour.</p>
@@ -81,7 +84,7 @@
     <aside class="connections">
       <h2>Related notes</h2>
       <ul>
-        <li><a href="/notes/16gb-vram-local-model-shootout/">The 16 GB VRAM local-model shootout</a></li><li><a href="/notes/live-voice-tiggy-iphone/">Giving Tiggy a live voice through an iPhone</a></li><li><a href="/notes/local-failover-orphan-process/">Local-model failover and the orphan-process bug</a></li><li><a href="/notes/why-moshika-was-wrong-for-tiggy/">Why Moshika was impressive but wrong for Tiggy</a></li>
+        <li><a href="/notes/16gb-vram-local-model-shootout/">The 16 GB VRAM local-model shootout</a></li><li><a href="/notes/live-voice-tiggy-iphone/">Building an iPhone voice interface for an OpenClaw agent</a></li><li><a href="/notes/local-failover-orphan-process/">Local-model failover and the orphan-process bug</a></li><li><a href="/notes/why-moshika-was-wrong-for-tiggy/">Why Moshika was the wrong voice model for an OpenClaw agent</a></li>
       </ul>
     </aside>
   

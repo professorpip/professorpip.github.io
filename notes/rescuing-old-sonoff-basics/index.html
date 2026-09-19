@@ -62,7 +62,7 @@
 <li>serial logger disabled with <code>baud_rate: 0</code>.</li>
 </ul>
 <p>GPIO1 is normally the ESP8266 transmit pin. Disabling UART logging stopped it competing with the DHT11. Both OTA migrations completed, and Home Assistant exposed the relay, button, temperature, humidity and firmware update without opening the mains enclosures.</p>
-<h2>One broken wire, two second lives</h2>
+<h2>Repurposing the two recovered switches</h2>
 <p>Weeks later, one DHT11 became unknown while its ESPHome node and relay remained healthy. Physical inspection found a snapped wire. The working sensor went to a garden-room fan; the other device became a pure relay.</p>
 <p>The fan turns on above <strong>26 °C</strong> and off below <strong>25 °C</strong>, using hysteresis to avoid relay chatter. It logs real transitions and uses <code>RESTORE_DEFAULT_OFF</code>.</p>
 <p>The second switch is a last-resort server-recovery path, not an everyday socket. It uses <code>ALWAYS_ON</code>, disables API-disconnect reboot behaviour and requires explicit confirmation for off, on or cycle operations. A supervised ten-second power-cycle test restored the server; the full stack took about <strong>seven minutes</strong> to return.</p>
@@ -125,7 +125,7 @@
     <aside class="connections">
       <h2>Related notes</h2>
       <ul>
-        <li><a href="/notes/local-failover-orphan-process/">Local-model failover and the orphan-process bug</a></li><li><a href="/notes/notebook-workflow/">Building a one-tap lab notebook</a></li><li><a href="/notes/local-sunsynk-telemetry/">Local Sunsynk telemetry without the cloud</a></li><li><a href="/notes/health-check-broke-zigbee/">The health check that briefly broke Zigbee</a></li>
+        <li><a href="/notes/local-failover-orphan-process/">Local-model failover and the orphan-process bug</a></li><li><a href="/notes/notebook-workflow/">Building an approval-gated lab notebook with GitHub Actions</a></li><li><a href="/notes/local-sunsynk-telemetry/">Local SunSynk telemetry without the cloud</a></li><li><a href="/notes/health-check-broke-zigbee/">The health check that briefly broke Zigbee</a></li>
       </ul>
     </aside>
   

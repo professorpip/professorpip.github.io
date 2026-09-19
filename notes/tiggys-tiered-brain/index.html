@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
     
-    <title>Tiggy&#39;s tiered brain · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <title>A tiered model architecture for an OpenClaw agent · Phil &amp; Tiggy&#39;s Lab Notes</title>
     <link rel="stylesheet" href="/assets/site.css">
   </head>
   <body>
@@ -18,7 +18,7 @@
       </nav>
     </header>
     <main data-pagefind-body><article class="note">
-  <h1>Tiggy&#39;s tiered brain</h1>
+  <h1>A tiered model architecture for an OpenClaw agent</h1>
   
   <p class="eyebrow project-period">Project period · <time datetime="2026-06-12T00:00:00.000Z">June–September 2026</time></p>
   <p class="standfirst">Why one assistant ended up with cloud reasoning, a wake-on-demand GPU worker and a small local emergency model.</p>
@@ -35,7 +35,10 @@
 <li>A 16 GB Mac mini could run a much slower local Qwen profile when everything else was unavailable.</li>
 <li>Health checks and explicit routing mattered more than automatic fallback alone.</li>
 </ul>
-<p>“Run locally” sounded like one architectural choice. In practice it became three tiers with different jobs.</p>
+<p>Tiggy is a personal <strong>OpenClaw agent</strong> running on a 16 GB Mac mini. OpenClaw supplies the persistent session, tools, memory and routing around replaceable language models. “Run locally” therefore was not one architectural choice: by September 2026 the agent used three unequal model tiers with different jobs.</p>
+<blockquote>
+<p><strong>Architecture snapshot, September 2026:</strong> OpenClaw 2026.9.4 on macOS controlled the agent; cloud models handled the main reasoning path; an RTX 5060 Ti 16 GB machine served wake-on-demand local profiles; and the Mac mini retained a smaller emergency <code>llama.cpp</code> path.</p>
+</blockquote>
 <figure class="article-figure"><img src="/assets/diagrams/tiered-brain.svg" alt="Cloud, Ryzen GPU and Mac emergency tiers arranged by capability, availability and operating cost" loading="lazy" decoding="async"><figcaption>Routing chooses the cheapest healthy tier that can safely perform the task.</figcaption></figure>
 <h2>Three unequal tiers</h2>
 <p>The primary tier uses cloud models for conversations, ambiguous planning and work where judgement matters. It is the most capable and the least dependent on home hardware, but requires an external service.</p>
@@ -51,7 +54,7 @@
 <li>fail closed on external writes and consequential control;</li>
 <li>report degraded mode rather than pretending nothing changed.</li>
 </ol>
-<h2>The useful architecture</h2>
+<h2>The resulting three-tier architecture</h2>
 <p>The tiered brain does not eliminate outages. It separates them. Cloud trouble need not erase local diagnostics; a sleeping GPU need not block ordinary chat; an overloaded emergency process must not survive forever after the main service recovers.</p>
 <p>Resilience came from explicit roles, measured limits and boring health checks—not from putting three model names into a fallback list.</p>
 </div>
@@ -82,7 +85,7 @@
     <aside class="connections">
       <h2>Related notes</h2>
       <ul>
-        <li><a href="/notes/local-failover-orphan-process/">Local-model failover and the orphan-process bug</a></li><li><a href="/notes/live-voice-tiggy-iphone/">Giving Tiggy a live voice through an iPhone</a></li><li><a href="/notes/can-a-local-agent-do-real-work/">Can a local agent do real work?</a></li><li><a href="/notes/installing-hermes-on-a-vm/">Installing Hermes on a VM</a></li>
+        <li><a href="/notes/local-failover-orphan-process/">Local-model failover and the orphan-process bug</a></li><li><a href="/notes/live-voice-tiggy-iphone/">Building an iPhone voice interface for an OpenClaw agent</a></li><li><a href="/notes/can-a-local-agent-do-real-work/">Can a local AI agent harness do real work?</a></li><li><a href="/notes/installing-hermes-on-a-vm/">Running Hermes Agent in an isolated Ubuntu VM</a></li>
       </ul>
     </aside>
   

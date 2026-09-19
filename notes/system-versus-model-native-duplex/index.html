@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
     
-    <title>System duplex versus model-native duplex · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <title>System duplex versus model-native duplex for an AI voice assistant · Phil &amp; Tiggy&#39;s Lab Notes</title>
     <link rel="stylesheet" href="/assets/site.css">
   </head>
   <body>
@@ -18,7 +18,7 @@
       </nav>
     </header>
     <main data-pagefind-body><article class="note">
-  <h1>System duplex versus model-native duplex</h1>
+  <h1>System duplex versus model-native duplex for an AI voice assistant</h1>
   
   <p class="eyebrow project-period">Project period · <time datetime="2026-09-12T00:00:00.000Z">September 2026</time></p>
   <p class="standfirst">Composing local hearing, echo control and speech around the existing agent traded elegance for control.</p>
@@ -35,9 +35,9 @@
 <li>Warm local TTS produced first audio in about <strong>105–129 ms</strong>; typical final ASR took <strong>0.24–0.60 seconds</strong>.</li>
 <li>The modular system preserved Tiggy’s existing memory, tools and personality.</li>
 </ul>
-<p>Native duplex models absorb, reason and speak in one continuous loop. Our alternative looks less magical: specialist components joined around an existing text agent. It worked better for the job.</p>
+<p>Native duplex models absorb, reason and speak in one continuous loop. Our alternative joined specialist components around Tiggy, an existing stateful OpenClaw agent whose memory, tools and permissions already mattered. The modular route looked less magical, but it worked better for the job.</p>
 <figure class="article-figure"><img src="/assets/diagrams/system-duplex.svg" alt="A modular voice pipeline from browser echo cancellation through VAD, ASR, OpenClaw steer and cancellable TTS" loading="lazy" decoding="async"><figcaption>Each seam is measurable and OpenClaw remains the single source of agent state.</figcaption></figure>
-<h2>Keep the brain, replace the edges</h2>
+<h2>Keep OpenClaw as the stateful agent</h2>
 <p>The working path begins with iPhone Safari’s WebRTC capture and acoustic echo cancellation. Server-side voice activity detection and an energy gate reject noise. A 0.6B Nemotron model transcribes speech; <code>queueMode=steer</code> injects it into the active OpenClaw run or starts a normal turn. Gateway deltas feed sentence-sized chunks to Kokoro, whose British female output remains cancellable while listening continues.</p>
 <p>This preserves one agent state machine. Speech does not create a second memory, tool policy or personality.</p>
 <h2>Measure the seams</h2>
@@ -81,7 +81,7 @@
     <aside class="connections">
       <h2>Related notes</h2>
       <ul>
-        <li><a href="/notes/live-voice-tiggy-iphone/">Giving Tiggy a live voice through an iPhone</a></li><li><a href="/notes/why-moshika-was-wrong-for-tiggy/">Why Moshika was impressive but wrong for Tiggy</a></li><li><a href="/notes/notebook-workflow/">Building a one-tap lab notebook</a></li><li><a href="/notes/can-a-local-agent-do-real-work/">Can a local agent do real work?</a></li>
+        <li><a href="/notes/live-voice-tiggy-iphone/">Building an iPhone voice interface for an OpenClaw agent</a></li><li><a href="/notes/why-moshika-was-wrong-for-tiggy/">Why Moshika was the wrong voice model for an OpenClaw agent</a></li><li><a href="/notes/notebook-workflow/">Building an approval-gated lab notebook with GitHub Actions</a></li><li><a href="/notes/can-a-local-agent-do-real-work/">Can a local AI agent harness do real work?</a></li>
       </ul>
     </aside>
   

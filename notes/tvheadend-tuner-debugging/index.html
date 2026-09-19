@@ -35,10 +35,11 @@
 <li>Disabling only that frontend left the Sony DVB-T HAT serving clean streams.</li>
 <li>Pinning discovery to wired Ethernet and restarting Plex separated tuner, network and client-state faults.</li>
 </ul>
-<p>Plex could see the guide and channels but would not play them. The tempting diagnosis was “TVHeadend is broken”. Evidence from each layer told a narrower story.</p>
+<p>This installation used <strong>TVHeadend 4.3</strong> on a <strong>Raspberry Pi 3 Model B Rev 1.2</strong> as a UK Freeview tuner server. A Sony CXD2880 DVB-T/T2 HAT and a PCTV Systems tripleStick 292e USB tuner supplied terrestrial television; TVHeadend’s HDHomeRun emulation exposed those channels to Plex Live TV. Plex could see the guide and channels but would not play them. The tempting diagnosis was “TVHeadend is broken”. Evidence from each layer told a narrower story.</p>
+<figure class="article-figure hardware-photo"><img src="/assets/images/hardware-raspberry-pi-3-model-b.webp" alt="A bare Raspberry Pi 3 Model B single-board computer showing its USB, Ethernet, HDMI and GPIO connections" loading="lazy" decoding="async"><figcaption>The tuner server runs on a Raspberry Pi 3 Model B Rev 1.2; the DVB HAT attaches to its GPIO header and the second tuner uses USB. <span class="figure-credit">Photo: <a href="https://commons.wikimedia.org/wiki/File:Raspberry_Pi_3_Model_B.jpg">JvA43 · CC0</a></span></figcaption></figure>
 <figure class="article-figure"><img src="/assets/diagrams/tvheadend-debugging.svg" alt="Two DVB tuners feed TVHeadend on a dual-homed Raspberry Pi, then HDHomeRun discovery and Plex; failure markers isolate the noisy tuner and stale client path" loading="lazy" decoding="async"><figcaption>Testing each boundary prevented a working tuner server from being rebuilt unnecessarily.</figcaption></figure>
 <h2>Establish what works</h2>
-<p>The Pi ran TVHeadend with both a Sony DVB-T HAT and a USB triple tuner. Its API reported <strong>110 channels</strong>, <strong>114 services</strong> and nine multiplexes. A timed local request for one channel returned HTTP 200, MPEG transport-stream data and about 1.7 MB before the deliberate timeout.</p>
+<p>The Pi ran TVHeadend with both the Sony CXD2880 DVB-T/T2 HAT and the PCTV Systems tripleStick 292e. Its API reported <strong>110 channels</strong>, <strong>114 services</strong> and nine multiplexes. A timed local request for one channel returned HTTP 200, MPEG transport-stream data and about 1.7 MB before the deliberate timeout.</p>
 <p>That proved a channel could leave TVHeadend. It did not prove Plex was selecting a healthy tuner or reachable address.</p>
 <p>The Pi was dual-homed: Wi-Fi retained its old address while Ethernet became the preferred route. An obsolete proxy container elsewhere was stopped, and TVHeadend’s native HDHomeRun emulation became the intended discovery path.</p>
 <h2>Follow the failing subscription</h2>
@@ -82,7 +83,7 @@
     <aside class="connections">
       <h2>Related notes</h2>
       <ul>
-        <li><a href="/notes/local-sunsynk-telemetry/">Local Sunsynk telemetry without the cloud</a></li><li><a href="/notes/direct-rtsp-versus-transcoding/">Direct RTSP versus transcoding</a></li><li><a href="/notes/installing-hermes-on-a-vm/">Installing Hermes on a VM</a></li><li><a href="/notes/moving-zha-remote-coordinator/">Moving ZHA to a remote coordinator</a></li>
+        <li><a href="/notes/local-sunsynk-telemetry/">Local SunSynk telemetry without the cloud</a></li><li><a href="/notes/direct-rtsp-versus-transcoding/">Direct RTSP versus transcoding</a></li><li><a href="/notes/installing-hermes-on-a-vm/">Running Hermes Agent in an isolated Ubuntu VM</a></li><li><a href="/notes/moving-zha-remote-coordinator/">Moving ZHA to a remote coordinator</a></li>
       </ul>
     </aside>
   

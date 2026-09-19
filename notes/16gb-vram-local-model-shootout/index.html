@@ -36,6 +36,10 @@
 <li>The useful result was a portfolio of profiles, not one universal winner.</li>
 </ul>
 <p>A 16 GB graphics card can run surprisingly large quantised models. That does not mean every model which loads is useful.</p>
+<blockquote>
+<p><strong>Test platform, June–September 2026:</strong> AMD Ryzen 9 3950X (16 cores/32 threads), 64 GB system RAM and an NVIDIA GeForce RTX 5060 Ti with 16 GB VRAM. The early shootout used a Windows CUDA build of <code>llama.cpp</code>; later reliability work also used Ubuntu Server on the same machine. Model quant, context, cache and runtime settings are reported where they affected the result.</p>
+</blockquote>
+<figure class="article-figure hardware-photo"><img src="/assets/images/hardware-rtx-5060-ti-16gb.webp" alt="A dual-fan PNY GeForce RTX 5060 Ti 16 GB graphics card photographed from above" loading="lazy" decoding="async"><figcaption>A representative RTX 5060 Ti 16 GB board. The installed GPU is the same NVIDIA model class; the pictured PNY board is not claimed to be the exact installed card. <span class="figure-credit">Photo: <a href="https://commons.wikimedia.org/wiki/File:Nvidia_GeForce_RTX_5060_Ti_16GB,_PNY_Overclocked_Dual_Fan,_front.jpg">FreeMediaKid! · CC BY-SA 4.0</a></span></figcaption></figure>
 <figure class="article-figure"><img src="/assets/diagrams/16gb-model-shootout.svg" alt="A four-axis comparison separating speed, VRAM fit, task quality and agent reliability" loading="lazy" decoding="async"><figcaption>A model only became a deployment candidate after surviving all four gates.</figcaption></figure>
 <h2>The first lap</h2>
 <p>Our June bench used the same Windows machine, CUDA build and OpenAI-compatible llama.cpp endpoint. Gemma 4 12B used about <strong>8.6 GB</strong> after loading and generated roughly <strong>52–56 tokens/s</strong>. Qwen3-Coder 30B A3B occupied about <strong>14.6 GB</strong> but exceeded <strong>120 tokens/s</strong> on every short task. A 35B MoE Qwen sat between them. Gemma 4 26B loaded at roughly <strong>15.9 GB</strong> and crawled at about <strong>22–24 tokens/s</strong>.</p>
@@ -94,7 +98,7 @@
     <aside class="connections">
       <h2>Related notes</h2>
       <ul>
-        <li><a href="/notes/building-gcse-local-llm-benchmark/">Building a GCSE benchmark for local LLMs</a></li><li><a href="/notes/why-vram-fit-beat-parameters/">Why fitting in VRAM beat having more parameters</a></li><li><a href="/notes/live-voice-tiggy-iphone/">Giving Tiggy a live voice through an iPhone</a></li><li><a href="/notes/local-failover-orphan-process/">Local-model failover and the orphan-process bug</a></li>
+        <li><a href="/notes/building-gcse-local-llm-benchmark/">Building a GCSE benchmark for local LLMs</a></li><li><a href="/notes/why-vram-fit-beat-parameters/">Why fitting in VRAM beat having more parameters</a></li><li><a href="/notes/live-voice-tiggy-iphone/">Building an iPhone voice interface for an OpenClaw agent</a></li><li><a href="/notes/local-failover-orphan-process/">Local-model failover and the orphan-process bug</a></li>
       </ul>
     </aside>
   
@@ -104,7 +108,7 @@
     <aside class="connections">
       <h2>Pages linking here</h2>
       <ul>
-        <li><a href="/notes/why-vram-fit-beat-parameters/">Why fitting in VRAM beat having more parameters</a></li><li><a href="/notes/tiggys-tiered-brain/">Tiggy&#39;s tiered brain</a></li>
+        <li><a href="/notes/why-vram-fit-beat-parameters/">Why fitting in VRAM beat having more parameters</a></li><li><a href="/notes/tiggys-tiered-brain/">A tiered model architecture for an OpenClaw agent</a></li>
       </ul>
     </aside>
   

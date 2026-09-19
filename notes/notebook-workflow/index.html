@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
     
-    <title>Building a one-tap lab notebook · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <title>Building an approval-gated lab notebook with GitHub Actions · Phil &amp; Tiggy&#39;s Lab Notes</title>
     <link rel="stylesheet" href="/assets/site.css">
   </head>
   <body>
@@ -18,10 +18,10 @@
       </nav>
     </header>
     <main data-pagefind-body><article class="note">
-  <h1>Building a one-tap lab notebook</h1>
+  <h1>Building an approval-gated lab notebook with GitHub Actions</h1>
   
   <p class="eyebrow project-period">Project period · <time datetime="2026-09-12T00:00:00.000Z">September 2026</time></p>
-  <p class="standfirst">How a private Markdown workshop, phone-friendly rendered previews and a separate public output repository turned one merge into a controlled publication.</p>
+  <p class="standfirst">How private Markdown, phone-friendly previews and a separate public output repository made one reviewed merge the publication gate.</p>
   
     <ul class="topic-chips" aria-label="Topics">
       <li><a href="/topics/publishing/">Publishing</a></li><li><a href="/topics/github/">Github</a></li><li><a href="/topics/automation/">Automation</a></li><li><a href="/topics/eleventy/">Eleventy</a></li><li><a href="/topics/agent-architecture/">Agent Architecture</a></li>
@@ -33,9 +33,9 @@
 <li>Every pull request gets an unlisted, <code>noindex</code> rendered preview for phone review.</li>
 <li>Merging that exact pull request is the human publication decision.</li>
 <li>GitHub Actions rebuilds the approved source, publishes it through GitHub Pages and removes the closed preview.</li>
-<li>Six completed pull requests and four live articles proved the loop before this write-up.</li>
+<li>The first six pull requests proved the loop; later batches expanded the same method to twenty public notes.</li>
 </ul>
-<p>“One tap” describes the release, not the writing. A useful note still needs evidence, editing and checks.</p>
+<p>Tiggy is an OpenClaw agent that can reconstruct projects, draft Markdown and run build checks. The design problem was not automatic writing; it was how to keep evidence and drafts private, let Phil judge the rendered result on a phone, and require one explicit human decision before anything became public.</p>
 <figure class="article-figure"><img src="/assets/diagrams/one-tap-lab-notebook-workflow.svg" alt="Architecture diagram showing Tiggy preparing evidence and Markdown in a private source branch, GitHub Actions validating it and publishing an unlisted noindex preview for Phil&#39;s phone review, then an approved merge producing the public site from a separate generated-output repository while a closed pull request removes its preview" loading="lazy" decoding="async"><figcaption>Private source stays on the left of the publication boundary. Only generated preview or production files cross into the public Pages repository.</figcaption></figure>
 <h2>Why two repositories?</h2>
 <p>A hosted CMS would add another account, database and maintenance job. A public source repository would expose drafts, editorial planning and revision history. GitHub Free could not publish Pages directly from the private source repository.</p>
@@ -74,7 +74,7 @@
 <li><strong>Preview paths are real test cases.</strong> Running beneath <code>/previews/pr-N/</code> catches asset and navigation mistakes hidden by root-only local builds.</li>
 <li><strong>A green source Action is not publication proof.</strong> The public repository has its own Pages deployment, so the final check is the URL a reader can fetch.</li>
 </ul>
-<p>At this checkpoint the workflow had published four articles through six completed PRs, cleaned up their previews and kept the editorial backlog out of production.</p>
+<p>Those first six pull requests established the workflow. Later ordered batches used the same gate to expand the public notebook to twenty notes while keeping closed previews and the editorial backlog out of production.</p>
 <p>The result is deliberately boring infrastructure: Markdown, Git, static files and one human decision. That is the good kind of <a href="/topics/automation/" class="wiki-link">automation</a>.</p>
 </div>
 
@@ -128,7 +128,7 @@
     <aside class="connections">
       <h2>Related notes</h2>
       <ul>
-        <li><a href="/notes/local-failover-orphan-process/">Local-model failover and the orphan-process bug</a></li><li><a href="/notes/system-versus-model-native-duplex/">System duplex versus model-native duplex</a></li><li><a href="/notes/can-a-local-agent-do-real-work/">Can a local agent do real work?</a></li><li><a href="/notes/giving-hermes-jobs-without-keys/">Giving Hermes jobs without giving it the keys</a></li>
+        <li><a href="/notes/local-failover-orphan-process/">Local-model failover and the orphan-process bug</a></li><li><a href="/notes/system-versus-model-native-duplex/">System duplex versus model-native duplex for an AI voice assistant</a></li><li><a href="/notes/can-a-local-agent-do-real-work/">Can a local AI agent harness do real work?</a></li><li><a href="/notes/giving-hermes-jobs-without-keys/">Constrained delegation to a local Hermes agent</a></li>
       </ul>
     </aside>
   

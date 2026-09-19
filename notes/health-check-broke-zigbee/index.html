@@ -35,7 +35,8 @@
 <li>Safe monitoring now reads Home Assistant state and inspects the remote USB/process over SSH without connecting to the serial listener.</li>
 <li>The watchdog retries after 15 seconds before alerting on a transient outage.</li>
 </ul>
-<p>The health check used a familiar test: open a TCP connection and see whether the port answers. On a remote serial coordinator, that connection was not passive observation. It briefly competed for the radio.</p>
+<p>Home Assistant’s <strong>Zigbee Home Automation (ZHA)</strong> integration controlled the mesh through a Sonoff Zigbee 3.0 USB Dongle Plus. The dongle was attached to an OpenWRT access point and exposed to Home Assistant by <code>ser2net</code> as a live, effectively single-client serial connection. The health check used a familiar test: open its TCP port and see whether it answers. In this architecture that connection was not passive observation; it briefly competed with ZHA for the radio.</p>
+<figure class="article-figure hardware-photo"><img src="/assets/images/hardware-sonoff-zbdongle-p.webp" alt="A black Sonoff Zigbee 3.0 USB Dongle Plus with its external antenna attached" loading="lazy" decoding="async"><figcaption>The Sonoff ZBDongle-P is the USB coordinator at the centre of the remote ZHA serial link. <span class="figure-credit">Photo: <a href="https://itead.cc/product/sonoff-zigbee-3-0-usb-dongle-plus/">ITEAD / Sonoff product image</a></span></figcaption></figure>
 <figure class="article-figure"><img src="/assets/diagrams/zigbee-health-check.svg" alt="A monitoring probe opens the single live serial bridge, displaces Home Assistant briefly, then devices recover after reconnection" loading="lazy" decoding="async"><figcaption>The diagnostic changed the state it was trying to measure.</figcaption></figure>
 <h2>The suspicious pattern</h2>
 <p>During a morning check, all monitored ZHA devices suddenly appeared <code>unavailable</code>. The remote access point was healthy, <code>ser2net</code> was running and the USB device existed. About eight seconds later, entity values were fresh again.</p>
@@ -81,7 +82,7 @@
     <aside class="connections">
       <h2>Related notes</h2>
       <ul>
-        <li><a href="/notes/moving-zha-remote-coordinator/">Moving ZHA to a remote coordinator</a></li><li><a href="/notes/local-failover-orphan-process/">Local-model failover and the orphan-process bug</a></li><li><a href="/notes/local-sunsynk-telemetry/">Local Sunsynk telemetry without the cloud</a></li><li><a href="/notes/direct-rtsp-versus-transcoding/">Direct RTSP versus transcoding</a></li>
+        <li><a href="/notes/moving-zha-remote-coordinator/">Moving ZHA to a remote coordinator</a></li><li><a href="/notes/local-failover-orphan-process/">Local-model failover and the orphan-process bug</a></li><li><a href="/notes/local-sunsynk-telemetry/">Local SunSynk telemetry without the cloud</a></li><li><a href="/notes/direct-rtsp-versus-transcoding/">Direct RTSP versus transcoding</a></li>
       </ul>
     </aside>
   

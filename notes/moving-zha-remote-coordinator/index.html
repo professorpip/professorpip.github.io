@@ -35,10 +35,11 @@
 <li>ZHA changed from the old socket address to the new one after backups.</li>
 <li>Coordinator and mains-powered devices returned after restart; sleepy battery devices were allowed time to report.</li>
 </ul>
-<p>Improving Zigbee radio placement did not require moving Home Assistant. It required treating a spare USB port on an access point as a remote serial host.</p>
+<p>In a Zigbee network, the coordinator is the USB radio that forms and manages the mesh. Home Assistant’s <strong>ZHA</strong> integration normally talks to that radio as a serial device. Here the coordinator—a <strong>Sonoff Zigbee 3.0 USB Dongle Plus (ZBDongle-P)</strong>—was poorly placed near the automation server, while a <strong>Linksys E8450 access point running OpenWRT 24.10.4</strong> already sat nearer the garden. Improving radio placement did not require moving Home Assistant; it required treating the access point’s spare USB port as a remote serial host.</p>
+<figure class="article-figure hardware-photo"><img src="/assets/images/hardware-sonoff-zbdongle-p.webp" alt="A black Sonoff Zigbee 3.0 USB Dongle Plus with its external antenna attached" loading="lazy" decoding="async"><figcaption>The ZBDongle-P contains the Zigbee coordinator radio that moved to the remote OpenWRT host. <span class="figure-credit">Photo: <a href="https://itead.cc/product/sonoff-zigbee-3-0-usb-dongle-plus/">ITEAD / Sonoff product image</a></span></figcaption></figure>
 <figure class="article-figure"><img src="/assets/diagrams/remote-zha.svg" alt="Home Assistant connects over the LAN to ser2net on an OpenWRT access point, which owns the USB Zigbee coordinator" loading="lazy" decoding="async"><figcaption>Only the radio moves; Home Assistant and the Zigbee network remain logically in place.</figcaption></figure>
 <h2>Prepare the remote end</h2>
-<p>The coordinator was a Sonoff Zigbee USB dongle connected to an OpenWRT access point nearer the garden room. USB enumeration showed the adapter, but <code>/dev/ttyUSB0</code> was absent until the CP210x USB-serial package was installed.</p>
+<p>USB enumeration showed the dongle’s Silicon Labs serial interface, but <code>/dev/ttyUSB0</code> was absent until the CP210x USB-serial package was installed. The access point used <code>ser2net</code> 4.6.2 to bridge that device to the network.</p>
 <p>The access point already had <code>ser2net</code>, including a stale static listener aimed at the same device with the wrong speed. We backed up both configuration forms, removed the stale listener and created one raw endpoint mapping the serial device at <strong>115200 8N1</strong>. One process now owned the radio.</p>
 <h2>Move ZHA carefully</h2>
 <p>Home Assistant’s ZHA entry and the access-point files were backed up before changing the socket target. The subsequent API restart call returned a gateway timeout because Home Assistant dropped the request while restarting; service health, not the HTTP response alone, decided whether the change worked.</p>
@@ -81,7 +82,7 @@
     <aside class="connections">
       <h2>Related notes</h2>
       <ul>
-        <li><a href="/notes/health-check-broke-zigbee/">The health check that briefly broke Zigbee</a></li><li><a href="/notes/local-sunsynk-telemetry/">Local Sunsynk telemetry without the cloud</a></li><li><a href="/notes/direct-rtsp-versus-transcoding/">Direct RTSP versus transcoding</a></li><li><a href="/notes/installing-hermes-on-a-vm/">Installing Hermes on a VM</a></li>
+        <li><a href="/notes/health-check-broke-zigbee/">The health check that briefly broke Zigbee</a></li><li><a href="/notes/local-sunsynk-telemetry/">Local SunSynk telemetry without the cloud</a></li><li><a href="/notes/direct-rtsp-versus-transcoding/">Direct RTSP versus transcoding</a></li><li><a href="/notes/installing-hermes-on-a-vm/">Running Hermes Agent in an isolated Ubuntu VM</a></li>
       </ul>
     </aside>
   
