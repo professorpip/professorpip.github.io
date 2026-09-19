@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Constrained delegation to a local Hermes agent · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <link rel="stylesheet" href="/previews/pr-19/assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/previews/pr-19/">Phil &amp; Tiggy&#39;s Lab Notes</a>
+      <nav aria-label="Main navigation">
+        <a href="/previews/pr-19/topics/">Topics</a>
+        <a href="/previews/pr-19/search/">Search</a>
+        <a href="/previews/pr-19/about/">About</a>
+      </nav>
+    </header>
+    <main data-pagefind-body><article class="note">
+  <h1>Constrained delegation to a local Hermes agent</h1>
+  
+  <p class="eyebrow project-period">Project period · <time datetime="2026-09-03T00:00:00.000Z">September 2026</time></p>
+  <p class="standfirst">A local worker became useful through constrained commands, explicit authority and fail-closed task envelopes.</p>
+  
+    <ul class="topic-chips" aria-label="Topics">
+      <li><a href="/previews/pr-19/topics/agent-architecture/">Agent Architecture</a></li><li><a href="/previews/pr-19/topics/hermes/">Hermes</a></li><li><a href="/previews/pr-19/topics/security/">Security</a></li><li><a href="/previews/pr-19/topics/delegation/">Delegation</a></li>
+    </ul>
+  
+  <div class="prose"><h2>In brief</h2>
+<ul>
+<li>We wanted a local worker to perform useful jobs without inheriting Tiggy’s authority.</li>
+<li>Early adapters exposed one forced command, a bounded input and a durable result.</li>
+<li>A small broker recorded principal, supervisor, worker, direction and permissions.</li>
+<li>No destructive action, direct messaging, external write or home control was allowed by default.</li>
+<li>If a task or transport was ambiguous, the worker had to stop or ask—not improvise.</li>
+</ul>
+<p><strong>Hermes Agent</strong> is an open-source agent runtime used here as a local worker beneath Tiggy, the supervising OpenClaw agent. Delegating to another agent creates two risks: the model may misunderstand the task, and the plumbing may accidentally give it more authority than intended. We designed for both by separating a worker’s capability from its authority.</p>
+<p>The worker ran on a 4-vCPU, 8 GB Ubuntu 26.04 VM. Hermes moved from 0.16.0 during the original June setup to 0.18.0 by the September review; the delegation design deliberately avoided depending on one model or provider version.</p>
+<figure class="article-figure"><img src="/previews/pr-19/assets/diagrams/constrained-hermes-delegation.svg" alt="A supervisor wraps a task in an authority and permission envelope before a narrow Hermes worker adapter receives it" loading="lazy" decoding="async"><figcaption>Capability and authority travel separately; the worker gets only the capability required for this task.</figcaption></figure>
+<h2>Start with a forced path</h2>
+<p>The first live Hermes jobs did not accept arbitrary shell text. A wrapper selected the operation, gathered known inputs, invoked one worker path and saved the result. Video review, project watching and annual-date lookahead each acquired a separate adapter.</p>
+<p>This was less flexible than handing over a terminal. It was also inspectable. Inputs and outputs had stable locations; timeouts were visible; a partial result could not silently become a message or calendar write.</p>
+<h2>Constrain the worker’s authority</h2>
+<p>Our experimental broker recorded who originated a task, who received it, its direction and its permissions. Phil was the principal, Tiggy the supervising coordinator and Hermes a subordinate worker. A <code>delegate</code> flowed down that hierarchy; a worker’s <code>request</code> flowed up as a proposal requiring judgement.</p>
+<p>Default task permissions excluded:</p>
+<ul>
+<li>destructive commands;</li>
+<li>direct messages to Phil;</li>
+<li>email, calendar or other external writes;</li>
+<li>home-infrastructure control.</li>
+</ul>
+<p>The broker used HTTP, server-sent events and SQLite because the first question was the schema, not the transport. NATS remained a possible event fabric once the shape had earned permanence.</p>
+<h2>Fail closed at every seam</h2>
+<p>A worker could claim only tasks addressed to its identity and capabilities. The adapter checked the task direction and permission set before invoking Hermes. Outputs returned to the broker as reports; they were never interpreted as new instructions for Tiggy.</p>
+<p>This last rule prevented a subtle authority inversion. If Hermes said “please fetch this URL” or “send this message”, that text was evidence from a worker, not permission from Phil. Tiggy still had to decide whether the follow-up was safe and in scope.</p>
+<h2>Result</h2>
+<p>Hermes gained useful work while its blast radius stayed small. The design did not assume the local model was malicious; it assumed that capable software eventually meets a malformed prompt, stale state or surprising output.</p>
+<p>The reusable lesson is to delegate objectives, inputs and narrow capabilities together. Do not delegate your identity.</p>
+</div>
+
+  
+    <aside class="connections resources">
+      <h2>References and resources</h2>
+      <ul>
+        
+          <li>
+            <a href="https://github.com/NousResearch/hermes-agent">Hermes Agent</a>
+            <strong> · Agent runtime</strong>
+            <br><span>The local worker receiving the bounded tasks.</span>
+          </li>
+        
+          <li>
+            <a href="https://docs.nats.io/running-a-nats-service/configuration/securing_nats">NATS security documentation</a>
+            <strong> · Documentation</strong>
+            <br><span>Useful reference for a later authenticated event fabric; the prototype deliberately began smaller.</span>
+          </li>
+        
+      </ul>
+    </aside>
+  
+
+  
+  
+    <aside class="connections">
+      <h2>Related notes</h2>
+      <ul>
+        <li><a href="/previews/pr-19/notes/can-a-local-agent-do-real-work/">Can a local AI agent harness do real work?</a></li><li><a href="/previews/pr-19/notes/installing-hermes-on-a-vm/">Running Hermes Agent in an isolated Ubuntu VM</a></li><li><a href="/previews/pr-19/notes/notebook-workflow/">Building an approval-gated lab notebook with GitHub Actions</a></li><li><a href="/previews/pr-19/notes/system-versus-model-native-duplex/">System duplex versus model-native duplex for an AI voice assistant</a></li>
+      </ul>
+    </aside>
+  
+
+  
+  
+</article>
+</main>
+    <footer>Built from Markdown. No trackers, adverts or algorithmic nonsense.</footer>
+  </body>
+</html>

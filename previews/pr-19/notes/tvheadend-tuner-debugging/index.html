@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>TVHeadend tuner debugging · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <link rel="stylesheet" href="/previews/pr-19/assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/previews/pr-19/">Phil &amp; Tiggy&#39;s Lab Notes</a>
+      <nav aria-label="Main navigation">
+        <a href="/previews/pr-19/topics/">Topics</a>
+        <a href="/previews/pr-19/search/">Search</a>
+        <a href="/previews/pr-19/about/">About</a>
+      </nav>
+    </header>
+    <main data-pagefind-body><article class="note">
+  <h1>TVHeadend tuner debugging</h1>
+  
+  <p class="eyebrow project-period">Project period · <time datetime="2026-06-07T00:00:00.000Z">June–July 2026</time></p>
+  <p class="standfirst">Working local streams, two network paths and one noisy USB tuner explained a Plex Live TV failure.</p>
+  
+    <ul class="topic-chips" aria-label="Topics">
+      <li><a href="/previews/pr-19/topics/home-lab/">Home Lab</a></li><li><a href="/previews/pr-19/topics/tvheadend/">Tvheadend</a></li><li><a href="/previews/pr-19/topics/plex/">Plex</a></li><li><a href="/previews/pr-19/topics/raspberry-pi/">Raspberry Pi</a></li>
+    </ul>
+  
+  <div class="prose"><h2>In brief</h2>
+<ul>
+<li>TVHeadend exposed 110 channels and a local stream probe returned valid transport-stream data.</li>
+<li>The Raspberry Pi had both wired and wireless addresses, while discovery still advertised an unhelpful path.</li>
+<li>Plex subscriptions failed quickly and one USB tuner showed uncorrected-block and continuity errors.</li>
+<li>Disabling only that frontend left the Sony DVB-T HAT serving clean streams.</li>
+<li>Pinning discovery to wired Ethernet and restarting Plex separated tuner, network and client-state faults.</li>
+</ul>
+<p>This installation used <strong>TVHeadend 4.3</strong> on a <strong>Raspberry Pi 3 Model B Rev 1.2</strong> as a UK Freeview tuner server. A Sony CXD2880 DVB-T/T2 HAT and a PCTV Systems tripleStick 292e USB tuner supplied terrestrial television; TVHeadend’s HDHomeRun emulation exposed those channels to Plex Live TV. Plex could see the guide and channels but would not play them. The tempting diagnosis was “TVHeadend is broken”. Evidence from each layer told a narrower story.</p>
+<figure class="article-figure hardware-photo"><img src="/previews/pr-19/assets/images/hardware-raspberry-pi-3-model-b.webp" alt="A bare Raspberry Pi 3 Model B single-board computer showing its USB, Ethernet, HDMI and GPIO connections" loading="lazy" decoding="async"><figcaption>The tuner server runs on a Raspberry Pi 3 Model B Rev 1.2; the DVB HAT attaches to its GPIO header and the second tuner uses USB. <span class="figure-credit">Photo: <a href="https://commons.wikimedia.org/wiki/File:Raspberry_Pi_3_Model_B.jpg">JvA43 · CC0</a></span></figcaption></figure>
+<figure class="article-figure"><img src="/previews/pr-19/assets/diagrams/tvheadend-debugging.svg" alt="Two DVB tuners feed TVHeadend on a dual-homed Raspberry Pi, then HDHomeRun discovery and Plex; failure markers isolate the noisy tuner and stale client path" loading="lazy" decoding="async"><figcaption>Testing each boundary prevented a working tuner server from being rebuilt unnecessarily.</figcaption></figure>
+<h2>Establish what works</h2>
+<p>The Pi ran TVHeadend with both the Sony CXD2880 DVB-T/T2 HAT and the PCTV Systems tripleStick 292e. Its API reported <strong>110 channels</strong>, <strong>114 services</strong> and nine multiplexes. A timed local request for one channel returned HTTP 200, MPEG transport-stream data and about 1.7 MB before the deliberate timeout.</p>
+<p>That proved a channel could leave TVHeadend. It did not prove Plex was selecting a healthy tuner or reachable address.</p>
+<p>The Pi was dual-homed: Wi-Fi retained its old address while Ethernet became the preferred route. An obsolete proxy container elsewhere was stopped, and TVHeadend’s native HDHomeRun emulation became the intended discovery path.</p>
+<h2>Follow the failing subscription</h2>
+<p>TVHeadend logs showed Plex subscribing and unsubscribing after a few seconds. Runtime counters on the USB tuner recorded <strong>116 uncorrected blocks</strong>, <strong>30 continuity errors</strong> and an error block count of <strong>116</strong>. The Sony frontend did not show the same pattern.</p>
+<p>After a configuration backup, only the USB DVB-T/T2 frontend was disabled. A 20-second BBC One probe through the Sony succeeded. Plex then showed BBC streams running with TVHeadend subscription errors, uncorrected blocks and continuity errors all at zero.</p>
+<p>Discovery was pinned to the Pi’s wired address and the advertised tuner count reduced to one. A remaining “hostname could not be found” message pointed above TVHeadend, towards Plex’s cached DVR state. Restarting the Plex container finally restored playback.</p>
+<h2>Result</h2>
+<p>There were at least two faults: a noisy tuner path and stale client/discovery state. Local stream proof prevented both from being conflated with a dead server.</p>
+<p>The debugging order is reusable: verify a stream locally, inspect per-subscription and per-frontend counters, remove one suspect input, pin one network path, then reset the consuming client only after the source is clean.</p>
+</div>
+
+  
+    <aside class="connections resources">
+      <h2>References and resources</h2>
+      <ul>
+        
+          <li>
+            <a href="https://docs.tvheadend.org/">TVHeadend documentation</a>
+            <strong> · Official documentation</strong>
+            <br><span>Configuration and troubleshooting reference for the tuner server.</span>
+          </li>
+        
+          <li>
+            <a href="https://www.kernel.org/doc/html/latest/userspace-api/media/dvb/dvbapi.html">Linux TV media subsystem documentation</a>
+            <strong> · Kernel documentation</strong>
+            <br><span>Background for the DVB frontend, demultiplexing and stream interfaces involved.</span>
+          </li>
+        
+          <li>
+            <a href="https://support.plex.tv/articles/225877347-live-tv-dvr/">Plex Live TV support</a>
+            <strong> · Official documentation</strong>
+            <br><span>The consuming DVR layer whose state also had to be separated from tuner health.</span>
+          </li>
+        
+      </ul>
+    </aside>
+  
+
+  
+  
+    <aside class="connections">
+      <h2>Related notes</h2>
+      <ul>
+        <li><a href="/previews/pr-19/notes/local-sunsynk-telemetry/">Local SunSynk telemetry without the cloud</a></li><li><a href="/previews/pr-19/notes/direct-rtsp-versus-transcoding/">Direct RTSP versus transcoding</a></li><li><a href="/previews/pr-19/notes/installing-hermes-on-a-vm/">Running Hermes Agent in an isolated Ubuntu VM</a></li><li><a href="/previews/pr-19/notes/moving-zha-remote-coordinator/">Moving ZHA to a remote coordinator</a></li>
+      </ul>
+    </aside>
+  
+
+  
+  
+</article>
+</main>
+    <footer>Built from Markdown. No trackers, adverts or algorithmic nonsense.</footer>
+  </body>
+</html>
