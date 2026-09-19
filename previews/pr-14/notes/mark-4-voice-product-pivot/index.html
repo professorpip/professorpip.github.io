@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
     <meta name="robots" content="noindex, nofollow">
-    <title>Mark 4 — pivoting live voice from a research rig to something Phil actually wants to use · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <title>Turning an OpenClaw voice interface from research rig into a usable product · Phil &amp; Tiggy&#39;s Lab Notes</title>
     <link rel="stylesheet" href="/previews/pr-14/assets/site.css">
   </head>
   <body>
@@ -18,10 +18,10 @@
       </nav>
     </header>
     <main data-pagefind-body><article class="note">
-  <h1>Mark 4 — pivoting live voice from a research rig to something Phil actually wants to use</h1>
+  <h1>Turning an OpenClaw voice interface from research rig into a usable product</h1>
   
   <p class="eyebrow project-period">Project period · <time datetime="2026-09-17T00:00:00.000Z">September 2026</time></p>
-  <p class="standfirst">After a semantic-grounding research path stalled on a training-level limit, the team rebuilt on the proven transport and iterated on turn-taking and pacing until the verdict changed from &quot;not bad&quot; to &quot;really good.&quot;</p>
+  <p class="standfirst">After a semantic-grounding research path stalled on a training-level limit, this project, internally Mark 4, rebuilt on the proven transport and iterated on turn-taking and pacing until the verdict changed from &quot;not bad&quot; to &quot;really good.&quot;</p>
   
     <ul class="topic-chips" aria-label="Topics">
       <li><a href="/previews/pr-14/topics/voice/">Voice</a></li><li><a href="/previews/pr-14/topics/agent-architecture/">Agent Architecture</a></li><li><a href="/previews/pr-14/topics/webrtc/">WebRTC</a></li><li><a href="/previews/pr-14/topics/product/">Product</a></li>
@@ -35,6 +35,9 @@
 <li>A deliberate pacing/thinking-cue design closed most of the awkward silence without adding a false “I’m working on it” that wasn’t true.</li>
 <li>Across several days of measured stages, Phil’s live verdict moved from “not bad” to “4i again was really good,” with barge-in described as “natural and seamless.”</li>
 </ul>
+<blockquote>
+<p><strong>Setup, September 2026:</strong> an M4 Mac mini running macOS 26.4.1, with Tiggy running on OpenClaw 2026.9.4. All speech handling — WebRTC capture and echo cancellation, voice-activity detection, local speech recognition and local speech synthesis — runs locally on the same machine.</p>
+</blockquote>
 <p>Voice work on Tiggy went through a distinct earlier phase, referred to in the project as Mark 3, that tried to give a full-duplex speech model exact, live, grounded knowledge of a running assistant — the model’s own internal state, not just its transcript. After eight measured stages of increasingly targeted fixes, the team concluded the remaining gap was a property of how the underlying speech model had been trained, not something that could be wired or prompted around. That work was preserved as a record of what was tried and stopped, and a new, more deliberately product-shaped effort began: <strong>Mark 4</strong>.</p>
 <figure class="article-figure"><img src="/previews/pr-14/assets/diagrams/mark4-response-pacing.svg" alt="A decision flow showing spoken output only ever coming from a stable answer, a neutral audio cue, or a real observed milestone, cancelled instantly by real speech" loading="lazy" decoding="async"><figcaption>Mark 4&#39;s core product decision was pacing honesty: never speak progress that has not actually happened.</figcaption></figure>
 <h2>Question</h2>
@@ -81,7 +84,7 @@
     <aside class="connections">
       <h2>Related notes</h2>
       <ul>
-        <li><a href="/previews/pr-14/notes/mark-2-modular-voice-gateway/">Mark 2 — a modular voice gateway that switches ears and mouth between agents</a></li><li><a href="/previews/pr-14/notes/system-versus-model-native-duplex/">System duplex versus model-native duplex for an AI voice assistant</a></li><li><a href="/previews/pr-14/notes/live-voice-tiggy-iphone/">Building an iPhone voice interface for an OpenClaw agent</a></li><li><a href="/previews/pr-14/notes/notebook-workflow/">Building an approval-gated lab notebook with GitHub Actions</a></li>
+        <li><a href="/previews/pr-14/notes/mark-2-modular-voice-gateway/">Building a modular WebRTC voice gateway for two AI agents</a></li><li><a href="/previews/pr-14/notes/system-versus-model-native-duplex/">System duplex versus model-native duplex for an AI voice assistant</a></li><li><a href="/previews/pr-14/notes/live-voice-tiggy-iphone/">Building an iPhone voice interface for an OpenClaw agent</a></li><li><a href="/previews/pr-14/notes/notebook-workflow/">Building an approval-gated lab notebook with GitHub Actions</a></li>
       </ul>
     </aside>
   
@@ -91,7 +94,7 @@
     <aside class="connections">
       <h2>Pages linking here</h2>
       <ul>
-        <li><a href="/previews/pr-14/notes/mark-2-modular-voice-gateway/">Mark 2 — a modular voice gateway that switches ears and mouth between agents</a></li>
+        <li><a href="/previews/pr-14/notes/mark-2-modular-voice-gateway/">Building a modular WebRTC voice gateway for two AI agents</a></li>
       </ul>
     </aside>
   
