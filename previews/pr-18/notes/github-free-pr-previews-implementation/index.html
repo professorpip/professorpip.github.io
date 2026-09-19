@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Implementing GitHub Free PR previews for a private-source, public-output site · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <link rel="stylesheet" href="/previews/pr-18/assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/previews/pr-18/">Phil &amp; Tiggy&#39;s Lab Notes</a>
+      <nav aria-label="Main navigation">
+        <a href="/previews/pr-18/topics/">Topics</a>
+        <a href="/previews/pr-18/search/">Search</a>
+        <a href="/previews/pr-18/about/">About</a>
+      </nav>
+    </header>
+    <main data-pagefind-body><article class="note">
+  <h1>Implementing GitHub Free PR previews for a private-source, public-output site</h1>
+  
+  <p class="eyebrow project-period">Project period · <time datetime="2026-09-12T00:00:00.000Z">September 2026</time></p>
+  <p class="standfirst">A concrete recipe for path-prefixed, noindex PR previews on GitHub Free — base-path plumbing, cleanup, and the cache/propagation pitfalls that a green Actions check alone won&#39;t catch.</p>
+  
+    <ul class="topic-chips" aria-label="Topics">
+      <li><a href="/previews/pr-18/topics/github/">Github</a></li><li><a href="/previews/pr-18/topics/publishing/">Publishing</a></li><li><a href="/previews/pr-18/topics/eleventy/">Eleventy</a></li><li><a href="/previews/pr-18/topics/automation/">Automation</a></li>
+    </ul>
+  
+  <div class="prose"><h2>In brief</h2>
+<ul>
+<li>The GitHub Free / private-source-public-output split-repository pattern is described in <a href="/notes/notebook-workflow/">Building an approval-gated lab notebook with GitHub Actions</a>; this note is the practical implementation companion, not a repeat of that architecture story.</li>
+<li>The concrete recipe: an Eleventy <code>SITE_BASE_PATH</code>/<code>SITE_PREVIEW</code> environment pair drives both the build’s asset paths and a <code>&lt;meta name=&quot;robots&quot; content=&quot;noindex, nofollow&quot;&gt;</code> tag, so the same codebase produces production or any numbered preview from one build command.</li>
+<li>A path-prefixed preview is a genuinely different test than a root-only local build: it catches absolute-path asset and internal-link mistakes that a local <code>npm run serve</code> never exercises.</li>
+<li>Two specific pitfalls repeatedly needed independent verification rather than trust in a green Actions log: GitHub Pages’ own deployment layer lagging behind a successful build, and a CDN edge cache serving a stale 404 for a newly added asset immediately after deploy.</li>
+<li>Preview cleanup on PR close needs its own explicit check — confirming the old <code>/previews/pr-N/</code> path returns a real 404, not just that the workflow reported success.</li>
+</ul>
+<figure class="article-figure"><img src="/previews/pr-18/assets/diagrams/pr-preview-architecture.svg" alt="Diagram of a private source repository&#39;s CI publishing both production and per-PR preview builds to a separate public Pages-enabled repository" loading="lazy" decoding="async"><figcaption>The private repo and the public repo are two different GitHub projects, joined only by a scoped deploy key.</figcaption></figure>
+<h2>Question</h2>
+<p><a href="/notes/notebook-workflow/">Building an approval-gated lab notebook with GitHub Actions</a> covers why this project uses a split private-source/public-output repository pattern on GitHub Free. This note covers the part that story doesn’t: the concrete configuration recipe for making every pull request produce its own working, path-prefixed, <code>noindex</code> preview — and the specific pitfalls that only show up once you try to verify a preview is actually live and correct, not just that a workflow finished.</p>
+<h2>Setup</h2>
+<p>The private repository’s Eleventy build reads two environment variables set by the CI workflow depending on trigger type: <code>SITE_PREVIEW</code> (a boolean flag) and <code>SITE_BASE_PATH</code> (a path prefix, e.g. <code>/previews/pr-17</code>). A push to <code>main</code> runs the build with neither set, producing root-relative production output. A pull-request event sets both, producing output that assumes it will be served from a numbered preview subpath on the separate public repository.</p>
+<h2>What we tried</h2>
+<p><strong>A concrete base-path/preview-flag recipe.</strong> Every template and asset reference in the Eleventy build resolves through a small <code>withBase()</code> helper that prefixes <code>SITE_BASE_PATH</code> when set, so the same Nunjucks templates and Markdown produce correct root-relative links in production and correct <code>/previews/pr-N/</code>-relative links in preview, with no per-environment template branching. The same <code>SITE_PREVIEW</code> flag also switches in a <code>noindex, nofollow</code> robots meta tag and, separately, gates whether the preview-only editorial backlog renders at all.</p>
+<p><strong>Treating the path prefix as a real test, not a cosmetic detail.</strong> Running the build under <code>/previews/pr-N/</code> rather than root-only catches classes of bug a local <code>npm run serve</code> never would: an absolute <code>/assets/...</code> reference that happens to resolve locally but breaks under a subpath, or an internal link built without the base-path helper. The project’s own link checker runs against both the production and preview builds for this reason.</p>
+<p><strong>Two pitfalls that only verification against the real URL catches.</strong> GitHub Actions reporting a successful workflow run doesn’t, by itself, prove the public page is live and correct — GitHub Pages deployment is a separate layer that can genuinely lag behind a green Actions run, sometimes by tens of seconds. Separately, a CDN edge cache can serve a stale cached 404 for a newly added asset immediately after deployment, even once the underlying file is genuinely present; a second, deliberate fetch (or a cache-busting query string) is needed to confirm the asset actually landed, rather than trusting the first response.</p>
+<p><strong>Cleanup verification as a distinct check.</strong> Closing a PR triggers a cleanup job that removes that PR’s preview subtree from the public repository. Confirming this worked means fetching the old <code>/previews/pr-N/</code> path afterwards and checking for a genuine 404, not just reading the cleanup job’s own success status — the same two-different-claims discipline that applies to publishing a fresh preview also applies to removing an old one.</p>
+<h2>Result</h2>
+<p>The base-path/preview-flag recipe, combined with independent HTTP verification of both the preview and cleanup paths, produces a repeatable per-PR preview that needs no manual steps beyond opening the pull request. The specific pitfalls — Pages deployment lag and CDN cache staleness — are routine enough that they’re now checked on every PR update as a matter of course, not treated as one-off surprises.</p>
+<h2>What we would do next</h2>
+<p>The base-path/preview-flag pattern generalises directly to any other Eleventy (or similarly template-driven) static site facing the same GitHub Free Pages restriction. The verification habit — always independently fetching the real preview and cleanup URLs rather than trusting a green check alone — is the part worth carrying into any future publishing pipeline, regardless of static-site generator.</p>
+</div>
+
+  
+    <aside class="connections resources">
+      <h2>References and resources</h2>
+      <ul>
+        
+          <li>
+            <a href="https://docs.github.com/en/pages">GitHub Pages</a>
+            <strong> · Documentation</strong>
+            <br><span>The hosting mechanism this project needed, which GitHub Free withholds from private repositories.</span>
+          </li>
+        
+          <li>
+            <a href="https://github.com/peaceiris/actions-gh-pages">peaceiris/actions-gh-pages</a>
+            <strong> · Source repository</strong>
+            <br><span>The GitHub Action used to push generated site output to the separate public repository over a scoped deploy key.</span>
+          </li>
+        
+      </ul>
+    </aside>
+  
+
+  
+  
+    <aside class="connections">
+      <h2>Related notes</h2>
+      <ul>
+        <li><a href="/previews/pr-18/notes/notebook-workflow/">Building an approval-gated lab notebook with GitHub Actions</a></li><li><a href="/previews/pr-18/notes/local-failover-orphan-process/">Local-model failover and the orphan-process bug</a></li><li><a href="/previews/pr-18/notes/layered-physical-recovery-button-pusher-jetkvm/">Layered physical recovery with a servo button-presser and JetKVM</a></li><li><a href="/previews/pr-18/notes/rescuing-old-sonoff-basics/">Rescuing old Sonoff Basics with Tasmota and ESPHome</a></li>
+      </ul>
+    </aside>
+  
+
+  
+  
+</article>
+</main>
+    <footer>Built from Markdown. No trackers, adverts or algorithmic nonsense.</footer>
+  </body>
+</html>
