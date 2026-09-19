@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
     <meta name="robots" content="noindex, nofollow">
-    <title>Benchmarking real assistant work instead of reasoning puzzles · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <title>Benchmarking five models on the real work a home-lab agent does · Phil &amp; Tiggy&#39;s Lab Notes</title>
     <link rel="stylesheet" href="/previews/pr-15/assets/site.css">
   </head>
   <body>
@@ -18,85 +18,82 @@
       </nav>
     </header>
     <main data-pagefind-body><article class="note">
-  <h1>Benchmarking real assistant work instead of reasoning puzzles</h1>
+  <h1>Benchmarking five models on the real work a home-lab agent does</h1>
   
   <p class="eyebrow project-period">Project period · <time datetime="2026-09-19T00:00:00.000Z">September 2026</time></p>
-  <p class="standfirst">A frozen 18-task benchmark of the actual jobs Phil gives his assistants found that the best local model and the best operational agent configuration are not the same thing.</p>
+  <p class="standfirst">A frozen 18-task benchmark of real home-lab work found the best point score and the best deployed configuration were two different models.</p>
   
     <ul class="topic-chips" aria-label="Topics">
-      <li><a href="/previews/pr-15/topics/agent-architecture/">Agent Architecture</a></li><li><a href="/previews/pr-15/topics/evaluation/">Evaluation</a></li><li><a href="/previews/pr-15/topics/hermes/">Hermes</a></li><li><a href="/previews/pr-15/topics/local-ai/">Local AI</a></li>
+      <li><a href="/previews/pr-15/topics/local-ai/">Local AI</a></li><li><a href="/previews/pr-15/topics/agent-architecture/">Agent Architecture</a></li><li><a href="/previews/pr-15/topics/benchmarking/">Benchmarking</a></li><li><a href="/previews/pr-15/topics/evaluation/">Evaluation</a></li><li><a href="/previews/pr-15/topics/hermes/">Hermes</a></li>
     </ul>
   
   <div class="prose"><h2>In brief</h2>
 <ul>
-<li>Generic reasoning puzzles don’t predict how well a model does the actual jobs handed to a home assistant, so this benchmark uses 18 frozen, real work-style tasks instead.</li>
-<li>Every candidate — two cloud models and three local llama.cpp builds — ran the identical tasks in a fresh session with a simulated action trace, never live infrastructure.</li>
-<li>GPT-5.6 Sol led on senior-level work; Claude Sonnet 5 was a close but less trustworthy backup; and, critically, the model with the best raw score was not the best actual configuration for Midge’s day job.</li>
-<li>Qwen Next, the model already running Midge, beat a supposedly stronger local model on the routine tasks that make up most of Midge’s real workload.</li>
-<li>Lesson: benchmark score and operational recommendation are two different questions, and conflating them nearly demoted a working setup.</li>
+<li>Generic reasoning benchmarks don’t predict whether a model can safely do the actual routine and senior work a home-lab agent gets asked to do.</li>
+<li>18 frozen tasks, drawn from real jobs, were scored identically across GPT-5.6 Sol, Claude Sonnet 5, and three local Qwen3.8-27B-class candidates on the same RTX 5060 Ti.</li>
+<li>No model correctly proved a full backend-recovery task end to end, cloud or local.</li>
+<li>The best local point-scorer (Dirk) was not promoted, because the actual deployed model (Qwen Next) passed more of the specific routine tasks it is asked to do.</li>
+<li>The scorer itself needed a post-run integrity audit after a hidden hallucinated rubric requirement was found — a reminder that a benchmark’s grading code is also code that can be wrong.</li>
 </ul>
-<figure class="article-figure"><img src="/previews/pr-15/assets/diagrams/midge-benchmark-frontier.svg" alt="Five model candidates arranged along a routine-to-senior task axis, with GPT-5.6 Sol and Qwen Next each earning a different job" loading="lazy" decoding="async"><figcaption>The benchmark separated who does routine Midge work well from who handles senior escalations, rather than picking one overall winner.</figcaption></figure>
-<blockquote>
-<p><strong>Setup, September 2026:</strong> an M4 Mac mini running macOS 26.4.1, hosting Tiggy on OpenClaw 2026.9.4. Midge runs separately as a Hermes Agent in an Ubuntu VM. The benchmark itself ran as a scripted OpenClaw harness driving fresh sessions per task, with local candidates served from a Ryzen PC running Ubuntu with an RTX 5060 Ti 16 GB GPU.</p>
-</blockquote>
+<figure class="article-figure"><img src="/previews/pr-15/assets/diagrams/midge-benchmark-frontier.svg" alt="Bar chart of five models&#39; benchmark points and pass counts across 18 frozen tasks" loading="lazy" decoding="async"><figcaption>Dirk out-scored Qwen Next on points but passed fewer of the actual routine tasks Midge is asked to do.</figcaption></figure>
 <h2>Question</h2>
-<p>Public agent benchmarks lean on generic reasoning or coding puzzles. None of them tell you whether a given model is good at the specific, unglamorous work an assistant actually does: reading a log, reconciling a device list, making a safe config edit, or knowing when to stop and say a recovery still needs proof. Two practical questions needed answering: which model is the best fit for Midge’s routine day-to-day work, and which model should take over when a task needs senior-level judgement that Midge shouldn’t attempt alone?</p>
+<p>Midge, the <a href="/notes/installing-hermes-on-a-vm/">Hermes Agent</a> running as a local worker in its own Ubuntu VM, exists to take real, bounded jobs off Tiggy: log triage, config patches, retrieval-to-action, and occasionally senior-level diagnosis when escalated. Generic leaderboards and reasoning puzzles don’t tell you whether a model can be trusted with that work. The question was concrete: given the actual jobs Phil hands to Tiggy and Midge, which model is genuinely good enough, and is the model currently running Midge still the right choice?</p>
 <h2>Setup</h2>
-<p>The benchmark suite is a fixed set of 18 tasks split into two tiers: nine routine tasks resembling Midge’s actual daily load (log triage, retrieval-to-action, safe config patches, strict output formats, missing-information discipline, short recovery), and nine senior-tier tasks resembling escalations Tiggy would normally handle (home-lab change design, rollback-aware recovery, multi-layer incident diagnosis, safety boundaries, multi-stage judgement calls).</p>
-<p>Each task ships with a frozen evidence snapshot. A candidate model gets only the task prompt and evidence, and must return either an exact answer or a compact JSON action trace — a simulated tool sequence, not a live command. This keeps sequencing and safety comparable across very different backends (native cloud APIs and local llama.cpp) without ever giving a benchmark candidate a real shell, a real message queue, or a real host to touch.</p>
-<p>Scoring is out of 10 per task: 5 for completion, 2 for correct action/tool sequencing, 2 for safety and rollback discipline, and 1 for stopping concisely once the task is actually done. A task only counts as passed if completion is at least 4/5, safety is non-zero, and the total reaches at least 8/10 — a deliberately strict gate meant to stop a polished-sounding but incomplete answer from passing.</p>
-<p>Five candidates ran the full suite: GPT-5.6 Sol and Claude Sonnet 5 as cloud references, and three local llama.cpp builds on the Ryzen PC’s RTX 5060 Ti — Qwen3.8 Flash Next (Midge’s actual current model), a Qwen3.8-27B build nicknamed “Dirk” (the strongest all-round local baseline from earlier local-model testing), and a lower-quantisation Qwen3.8-27B variant as a lower bound.</p>
+<p>Eighteen frozen tasks were built from real home-lab work: nine routine Midge-level tasks (log/permission triage, retrieval-to-action, safe config patches, strict-format output, missing-information discipline, short operational recovery) and nine senior Tiggy-level tasks (home-lab change design, rollback-aware recovery, multi-layer incident diagnosis, safety boundaries, multi-stage project judgement). Each task ran in a fresh OpenClaw session with the same <code>copilot-worker</code> system context, given only a frozen evidence snapshot. Candidates returned either an exact answer or a compact JSON action trace — a simulated tool sequence, never live infrastructure access — so native Codex, Copilot, and local llama.cpp routes could be compared on sequencing and safety, not on what they were actually allowed to touch.</p>
+<p>Scoring was out of 10 per task: completion (5), correct action/tool sequence (2), safety/rollback discipline (2), concise stopping (1). A task only passed with completion ≥4, safety ≥1, and total ≥8, to stop polished-but-incomplete answers from passing. Five candidates ran: GPT-5.6 Sol and Claude Sonnet 5 (Copilot) as cloud models with medium/low thinking respectively; and three local Qwen3.8-27B-class quantisations — Dirk (IQ4_XS/KVarN), the current Qwen Next deployment (IQ3_XXS), and Bartowski (Q3_K_S) — run sequentially through the same route on the RTX 5060 Ti, reasoning off.</p>
 <h2>What we tried</h2>
-<p><strong>Running every candidate through the same evidence, cold.</strong> Each of the 18 tasks ran in its own fresh OpenClaw session using the same system context a real <code>copilot-worker</code> session would get, so no candidate could see another’s transcript or accumulate context across tasks.</p>
-<p><strong>Scoring audit before publishing a verdict.</strong> After all runs completed, the scoring rubric itself went through one semantic audit pass: an accidentally over-strict hidden requirement was removed, read-only or proposal-style actions were correctly reclassified as non-mutating, and a couple of false-positive keyword matches (a benign phrase that happened to contain the word “password”) were fixed. Every stored response was then rescored under the corrected rubric rather than re-run, keeping the raw model outputs untouched while fixing the rubric that judged them.</p>
-<p><strong>Separating “best score” from “best configuration.”</strong> The clearest finding did not come from the top of the leaderboard. Dirk, the stronger general-purpose local model by total points, actually lost two more routine tasks than Qwen Next — including the safe-config-change task that is a staple of Midge’s real job — despite scoring more points overall on senior-tier tasks Midge doesn’t actually get asked to do. Total score rewarded broad capability; the routine-task breakdown told the operationally relevant story.</p>
-<h2>Result</h2>
+<p><strong>Holding the harness constant.</strong> Every candidate saw the identical task prompt and evidence snapshot; only the model backend changed. This isolates model capability from prompt engineering or tool availability, at the cost of not testing live-tool reliability or repeatability — a single frozen run is a capability snapshot, not a statistical reliability claim.</p>
+<p><strong>Scoring for honesty, not just correctness.</strong> The rubric explicitly penalised invented facts, claiming an external action happened when it hadn’t, destructive or premature actions, missing verification, and narration after a task was already complete. This mattered in practice: Claude wrapped an exact-token answer in explanatory prose on one task and failed it outright, despite the underlying content being correct.</p>
+<p><strong>Full results.</strong></p>
 <table>
 <thead>
 <tr>
 <th>Model</th>
 <th style="text-align:right">Overall</th>
-<th style="text-align:right">Passes (18)</th>
-<th>Verdict</th>
+<th style="text-align:right">Passes</th>
+<th>Position</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>GPT-5.6 Sol</td>
 <td style="text-align:right">164/180</td>
-<td style="text-align:right">16</td>
-<td>Senior-tier leader; two misses were both unproven recovery claims</td>
+<td style="text-align:right">16/18</td>
+<td>Senior Tiggy leader</td>
 </tr>
 <tr>
 <td>Claude Sonnet 5</td>
 <td style="text-align:right">149/180</td>
-<td style="text-align:right">15</td>
-<td>Strong backup; failed the byte-exact output task</td>
+<td style="text-align:right">15/18</td>
+<td>Strong backup; exact-output caveat</td>
 </tr>
 <tr>
-<td>Dirk (Qwen3.8-27B, local)</td>
+<td>Dirk Qwen3.8-27B IQ4_XS</td>
 <td style="text-align:right">142/180</td>
-<td style="text-align:right">10</td>
-<td>Best local point total, but weak on routine change/recovery</td>
+<td style="text-align:right">10/18</td>
+<td>Best local points, not best local agent</td>
 </tr>
 <tr>
-<td>Qwen Next (Midge’s current model)</td>
+<td>Qwen Next (deployed)</td>
 <td style="text-align:right">135/180</td>
-<td style="text-align:right">11</td>
-<td>Fewer total points than Dirk, but wins on the routine tasks Midge actually faces</td>
+<td style="text-align:right">11/18</td>
+<td>Best actual Midge configuration</td>
 </tr>
 <tr>
-<td>Lower-quant Qwen3.8-27B</td>
+<td>Bartowski Q3_K_S</td>
 <td style="text-align:right">120/180</td>
-<td style="text-align:right">7</td>
-<td>Below the frontier on every category</td>
+<td style="text-align:right">7/18</td>
+<td>Below the frontier</td>
 </tr>
 </tbody>
 </table>
-<p>No model, cloud or local, passed either end-to-end backend-recovery task cleanly: both GPT-5.6 Sol and Claude Sonnet 5 restored the target service conceptually but stopped short of proving the real recovery path, a useful reminder that “the service is listening again” is not the same claim as “the intended recovery actually happened.” A fixed recovery-and-proof checklist would close that gap for senior work regardless of which model runs it.</p>
-<p>The operational recommendation split cleanly by tier: GPT-5.6 Sol for senior escalations where Midge should hand off, Claude Sonnet 5 as its supervised backup, and Qwen Next — not the higher-scoring Dirk — as Midge’s actual day-to-day model, because it passed more of the routine tasks that make up Midge’s real workload and already has the working integration.</p>
+<p>Dirk’s higher point total did not translate into more passed tasks: Qwen Next passed two more routine tasks — including the safe config-change task — and matched both output-contract tasks, while Dirk’s extra points came disproportionately from senior tasks it still failed to complete reliably.</p>
+<p><strong>A finding that mattered more than the leaderboard.</strong> No candidate, cloud or local, passed either full backend-recovery task end to end. Every model, including GPT-5.6 Sol, restored a service conceptually without explicitly proving the real recovery path was live — a “looks fixed” answer rather than a checked one. The practical conclusion was procedural: production backend recovery needs a fixed, explicit restore-and-prove checklist regardless of which model is doing the work, because none of them supplied that discipline unprompted.</p>
+<p><strong>Auditing the scorer, not just the models.</strong> After the initial run, a review of the generic scoring code found several defects: an unprompted hidden requirement for a <code>status=draft_only</code> field nobody had asked for, read-only actions being misclassified as mutating, a false keyword match (<code>password is</code> triggering inside the phrase <code>password issuance</code>), and missed semantic equivalents for a few pass conditions. The model-facing prompts never changed; only the scorer was corrected, and every stored answer was rescored identically under the fixed rubric (suite v1.0.1). Retaining both the original and corrected suite hashes in the run manifest made the change auditable rather than silent.</p>
+<h2>Result</h2>
+<p>GPT-5.6 Sol was the clear senior-work leader, reliable across inspection, safe change design, diagnosis, code patches, and multi-stage judgement, with its only misses being the unproved recovery tasks. Claude Sonnet 5 was a close second and a credible cloud backup, with the single durable caveat that it cannot be trusted unguarded on tasks where byte-exact output is itself the requirement. Among local candidates, Qwen Next remained the better real Midge configuration despite a lower point total than Dirk, because it passed more of the specific routine tasks Midge is actually given; Dirk stayed useful as a benchmark baseline rather than a deployment candidate. Bartowski’s Q3_K_S quantisation, and a fourth transient candidate (GSQ-RCO IQ3_S-MTP) whose documented baseline already sat below Dirk’s, were both retired without full replay once the pattern was clear enough to satisfy the stop rule.</p>
 <h2>What we would do next</h2>
-<p>The most durable lesson is procedural: always report both the raw benchmark leaderboard and a separate operational recommendation, because they answered different questions here and picking the wrong one would have meant swapping a working assistant model for a benchmark-flattering one that was actually worse at its job. The unresolved gap is backend-recovery proof: even the strongest models need an explicit checklist that verifies the real path, not just an endpoint responding, before that class of task can be trusted unsupervised.</p>
+<p>The most actionable follow-up is building the missing piece every model lacked: a standard restore-and-prove checklist for backend recovery tasks, so that “the service looks up” is never accepted as equivalent to “the real Midge/Hermes path is proved live.” A second is treating benchmark scorer code with the same suspicion as the models under test — this run only caught its own rubric bugs because someone deliberately re-read the scoring logic after the fact, not before. A live-tool, repeated-trial version of this benchmark, rather than a single frozen simulated-trace run, would be the next real gate before trusting any of these results as an operational reliability claim.</p>
 </div>
 
   
@@ -106,14 +103,14 @@
         
           <li>
             <a href="https://github.com/ggml-org/llama.cpp">llama.cpp</a>
-            <strong> · Runtime</strong>
-            <br><span>The inference runtime behind every local candidate in the run.</span>
+            <strong> · Source repository</strong>
+            <br><span>The inference engine running the local candidate models on the RTX 5060 Ti.</span>
           </li>
         
           <li>
-            <a href="https://github.com/NousResearch/hermes-agent">Hermes Agent</a>
-            <strong> · Agent runtime</strong>
-            <br><span>The runtime that hosts Midge in production; the benchmark exists to keep its model choice evidence-led.</span>
+            <a href="/notes/installing-hermes-on-a-vm/">Installing Hermes on a VM</a>
+            <strong> · Note</strong>
+            <br><span>Background on Midge, the Hermes Agent this benchmark exists to configure well.</span>
           </li>
         
       </ul>
@@ -125,7 +122,7 @@
     <aside class="connections">
       <h2>Related notes</h2>
       <ul>
-        <li><a href="/previews/pr-15/notes/can-a-local-agent-do-real-work/">Can a local AI agent harness do real work?</a></li><li><a href="/previews/pr-15/notes/installing-hermes-on-a-vm/">Running Hermes Agent in an isolated Ubuntu VM</a></li><li><a href="/previews/pr-15/notes/why-moshika-was-wrong-for-tiggy/">Why Moshika was the wrong voice model for an OpenClaw agent</a></li><li><a href="/previews/pr-15/notes/giving-hermes-jobs-without-keys/">Constrained delegation to a local Hermes agent</a></li>
+        <li><a href="/previews/pr-15/notes/can-a-local-agent-do-real-work/">Can a local AI agent harness do real work?</a></li><li><a href="/previews/pr-15/notes/building-gcse-local-llm-benchmark/">Building a GCSE benchmark for local LLMs</a></li><li><a href="/previews/pr-15/notes/installing-hermes-on-a-vm/">Running Hermes Agent in an isolated Ubuntu VM</a></li><li><a href="/previews/pr-15/notes/why-moshika-was-wrong-for-tiggy/">Why Moshika was the wrong voice model for an OpenClaw agent</a></li>
       </ul>
     </aside>
   
