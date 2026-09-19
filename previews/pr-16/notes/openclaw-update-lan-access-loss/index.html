@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>The OpenClaw update that silently lost LAN access · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <link rel="stylesheet" href="/previews/pr-16/assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/previews/pr-16/">Phil &amp; Tiggy&#39;s Lab Notes</a>
+      <nav aria-label="Main navigation">
+        <a href="/previews/pr-16/topics/">Topics</a>
+        <a href="/previews/pr-16/search/">Search</a>
+        <a href="/previews/pr-16/about/">About</a>
+      </nav>
+    </header>
+    <main data-pagefind-body><article class="note">
+  <h1>The OpenClaw update that silently lost LAN access</h1>
+  
+  <p class="eyebrow project-period">Project period · <time datetime="2026-09-11T00:00:00.000Z">September 2026</time></p>
+  <p class="standfirst">An OpenClaw update left a duplicate, disabled macOS Local Network permission entry for the same process, silently blocking every LAN peer and pointing suspicion at the wrong systems first.</p>
+  
+    <ul class="topic-chips" aria-label="Topics">
+      <li><a href="/previews/pr-16/topics/openclaw/">OpenClaw</a></li><li><a href="/previews/pr-16/topics/reliability/">Reliability</a></li><li><a href="/previews/pr-16/topics/networking/">Networking</a></li><li><a href="/previews/pr-16/topics/security/">Security</a></li>
+    </ul>
+  
+  <div class="prose"><h2>In brief</h2>
+<ul>
+<li>A routine OpenClaw version update (2026.7.1-2 to 2026.9.4) coincided with the assistant losing the ability to reach any LAN peer at all.</li>
+<li>The real cause was macOS silently creating a second, disabled Local Network permission entry for the updated process, alongside the original enabled one.</li>
+<li>Symptoms looked like a Home Assistant or router/firewall problem first, because the assistant could still run commands and answer chat, just not reach anything on the LAN.</li>
+<li>Enabling the disabled duplicate entry in System Settings fixed live LAN access immediately, with no further changes needed.</li>
+<li>The durable lesson: after any future OpenClaw update, check macOS Local Network permissions for duplicate or disabled entries before investigating the home network itself.</li>
+</ul>
+<figure class="article-figure"><img src="/previews/pr-16/assets/diagrams/lan-permission-duplicate.svg" alt="Diagram of two macOS Local Network permission entries for the same process, one enabled and one silently disabled after an update" loading="lazy" decoding="async"><figcaption>The disabled duplicate blocked all LAN traffic while looking, from outside, like a Home Assistant or network problem.</figcaption></figure>
+<h2>Question</h2>
+<p>During an OpenClaw update from 2026.7.1-2 to 2026.9.4, the assistant became unable to reach anything on the home LAN: Home Assistant, the Unraid NAS, OpenWRT access points, and other local peers all stopped responding to the live runner, even though the assistant itself was still up and could still read memory, use non-network tools, and reply in chat. The obvious suspects were the things that had recently changed or historically been flaky: Home Assistant itself, or the OPNsense router/firewall. The real question was simpler and much less obvious: had the update actually broken networking, or had something entirely outside OpenClaw quietly changed?</p>
+<h2>Setup</h2>
+<p>The host was the same Mac mini running the assistant day to day, with an OpenClaw Gateway running as a macOS LaunchAgent. The update itself completed without an error being reported, and the assistant remained reachable via Telegram, so the failure mode was specifically “the live runner cannot reach LAN peers,” not “the assistant is down.” This is an easy failure mode to misdiagnose, because everything about the assistant’s own health checks can look fine while the actual capability that matters — reaching the rest of the home network — is silently gone.</p>
+<h2>What we tried</h2>
+<p><strong>Ruling out the obvious network-side suspects first.</strong> Before touching macOS system settings, the usual home-network health checks were run: was Home Assistant actually up, was the router doing anything unusual, had OPNsense changed. These came back clean, which is itself useful evidence — it meant the fault was very likely local to the Mac mini’s own network stack or permissions, not the network itself.</p>
+<p><strong>Checking macOS’s per-process Local Network permission.</strong> macOS gates outbound LAN discovery/access per process through a Local Network permission prompt and toggle in System Settings → Privacy &amp; Security → Local Network. This is a permission model many users and operators don’t think to check because it’s easy to assume it was granted once and stays granted. Inspecting it directly showed <strong>two</strong> <code>node</code> entries, not one: one enabled, one disabled. The update had installed or relaunched the Node process from a path or binary identity that macOS treated as distinct enough to warrant a fresh permission entry — and that fresh entry defaulted to disabled, silently, with no prompt or error surfaced to the user or the assistant.</p>
+<p><strong>A one-toggle fix, once correctly diagnosed.</strong> Enabling the disabled <code>node</code> entry immediately restored live LAN access. No LaunchAgent restart, no OpenClaw reinstall, no network configuration change was needed — the entire fault was that one specific macOS permission toggle.</p>
+<p><strong>Full post-fix verification, not just “seems to work now.”</strong> Rather than accepting the fix on the strength of one successful ping, a fuller check confirmed the live runner could reach the router, the Unraid NAS, Home Assistant, and an OpenWRT access point; that HTTP requests to the Unraid management agent and Home Assistant’s REST API both returned successful responses; and that scheduled battery-monitoring scripts, which depend on reaching Home Assistant, completed cleanly and quietly rather than throwing errors.</p>
+<p><strong>Other issues surfaced in the same update, kept separate from the LAN root cause.</strong> The same update night also required fixing scheduled job failures caused by a changed config shape for managed environment variables (old scripts expected a flat <code>env.HA_MCP_TOKEN</code>; the current config nests it under <code>env.vars.HA_MCP_TOKEN</code>), and separately restoring Active Memory/embedding search after an OpenAI embeddings credit-balance failure by explicitly setting the embedding provider to <code>&quot;none&quot;</code>. These were real, independent problems worth fixing, but treating them as one undifferentiated “the update broke everything” event would have obscured the specific, narrow, and easily fixable LAN permission cause.</p>
+<h2>Result</h2>
+<p>Live LAN access was fully restored by enabling the single disabled <code>node</code> entry, verified by successful reachability, HTTP 200 responses from Home Assistant and the Unraid management agent, and clean completion of LAN-dependent scheduled jobs. The update-night incident, considered as a whole, was more stressful and time-consuming than the eventual root cause deserved: verification by CLI health checks alone had not been enough, and direct intervention was needed to notice the assistant had gone unresponsive during the broader recovery. The specific LAN cause, once found, was a single toggle — the difficulty was entirely in diagnosis, not in the fix.</p>
+<h2>What we would do next</h2>
+<p>The durable operational change was explicit: future OpenClaw updates should proactively test LAN peer reachability from the live runner as a standard post-update check, and specifically inspect macOS Local Network permissions for duplicate or disabled entries before suspecting Home Assistant or the router. This is now a documented first-check rather than something to rediscover from scratch after the next update that happens to trigger the same macOS behaviour.</p>
+</div>
+
+  
+    <aside class="connections resources">
+      <h2>References and resources</h2>
+      <ul>
+        
+          <li>
+            <a href="https://github.com/openclaw/openclaw">OpenClaw</a>
+            <strong> · Source repository</strong>
+            <br><span>The assistant framework whose updated binary path triggered the duplicate macOS permission entry.</span>
+          </li>
+        
+      </ul>
+    </aside>
+  
+
+  
+  
+    <aside class="connections">
+      <h2>Related notes</h2>
+      <ul>
+        <li><a href="/previews/pr-16/notes/local-failover-orphan-process/">Local-model failover and the orphan-process bug</a></li><li><a href="/previews/pr-16/notes/tiggys-tiered-brain/">A tiered model architecture for an OpenClaw agent</a></li><li><a href="/previews/pr-16/notes/living-lan-inventory/">Building a living LAN inventory without aggressive scanning</a></li><li><a href="/previews/pr-16/notes/vm-to-mac-mini-migration/">Migrating an OpenClaw agent from a VM to a Mac mini without losing continuity</a></li>
+      </ul>
+    </aside>
+  
+
+  
+  
+</article>
+</main>
+    <footer>Built from Markdown. No trackers, adverts or algorithmic nonsense.</footer>
+  </body>
+</html>

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Building a living LAN inventory without aggressive scanning · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <link rel="stylesheet" href="/previews/pr-16/assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/previews/pr-16/">Phil &amp; Tiggy&#39;s Lab Notes</a>
+      <nav aria-label="Main navigation">
+        <a href="/previews/pr-16/topics/">Topics</a>
+        <a href="/previews/pr-16/search/">Search</a>
+        <a href="/previews/pr-16/about/">About</a>
+      </nav>
+    </header>
+    <main data-pagefind-body><article class="note">
+  <h1>Building a living LAN inventory without aggressive scanning</h1>
+  
+  <p class="eyebrow project-period">Project period · <time datetime="2026-05-04T00:00:00.000Z">May–September 2026</time></p>
+  <p class="standfirst">ICMP, ARP and reverse lookup produced a useful household inventory while preserving uncertainty and avoiding broad port scans.</p>
+  
+    <ul class="topic-chips" aria-label="Topics">
+      <li><a href="/previews/pr-16/topics/home-lab/">Home Lab</a></li><li><a href="/previews/pr-16/topics/networking/">Networking</a></li><li><a href="/previews/pr-16/topics/inventory/">Inventory</a></li><li><a href="/previews/pr-16/topics/security/">Security</a></li>
+    </ul>
+  
+  <div class="prose"><h2>In brief</h2>
+<ul>
+<li>We wanted a useful household device inventory without treating the LAN like a penetration-test target.</li>
+<li>The first pass used an ICMP sweep, neighbour/ARP tables and local reverse lookup only.</li>
+<li>Observations recorded interface and evidence type instead of pretending every address was definitive.</li>
+<li>Dual-homed machines, sleeping devices, private Wi-Fi MACs and isolated subnets remained explicit caveats.</li>
+<li>Later project work enriched the inventory from configuration and device evidence rather than rescanning everything aggressively.</li>
+</ul>
+<p>A home network inventory is always incomplete. The honest goal is a living evidence set, not a frozen list labelled “all devices”.</p>
+<figure class="article-figure"><img src="/previews/pr-16/assets/diagrams/living-lan-inventory.svg" alt="ICMP responses, ARP observations and local names converge into an inventory with confidence labels and unresolved devices" loading="lazy" decoding="async"><figcaption>Multiple weak signals become useful when their uncertainty is preserved.</figcaption></figure>
+<h2>A deliberately light first pass</h2>
+<p>The scan sent ordinary reachability probes across one local subnet, then collected the Mac’s neighbour tables and attempted local name resolution. It did not enumerate services or sweep ports. Results distinguished devices that answered from addresses seen only in ARP.</p>
+<p>That difference matters. ARP proves that a local interface recently associated an address with a link-layer identity. It does not prove the device is awake now, who owns it or whether a randomised MAC will persist. ICMP silence does not prove absence; many devices ignore echo requests.</p>
+<h2>Record the awkward cases</h2>
+<p>The scanning Mac itself had Ethernet and Wi-Fi on the same subnet, so some neighbours appeared through both interfaces. Other machines were dual-homed. Phones and laptops could use private Wi-Fi MACs. One gaming PC lived behind a separate firewall interface and could not be attributed from the main LAN at all.</p>
+<p>The inventory therefore kept source interfaces, observed names and status notes. Unknown remained a valid value. Device identity was strengthened later through DHCP leases, access-point associations, application configuration, labels and hands-on project work.</p>
+<p>This also avoided an attractive nuisance: turning one inventory exercise into an unapproved service scan of every family and IoT device. Deeper probes were reserved for a specific troubleshooting task.</p>
+<h2>Result</h2>
+<p>The first snapshot was good enough to locate known infrastructure, spot cameras and build a list for refinement. It was not sold as a source of truth.</p>
+<p>A living inventory improves by accumulating corroborated observations and expiring stale confidence. Capture what answered, what was merely cached, how it was seen and what remains unreachable from this vantage point. Honest uncertainty is a feature of network documentation.</p>
+</div>
+
+  
+    <aside class="connections resources">
+      <h2>References and resources</h2>
+      <ul>
+        
+          <li>
+            <a href="https://www.rfc-editor.org/rfc/rfc826">RFC 826 — Address Resolution Protocol</a>
+            <strong> · Protocol specification</strong>
+            <br><span>Background for the neighbour information used to associate local IP and MAC addresses.</span>
+          </li>
+        
+          <li>
+            <a href="https://www.rfc-editor.org/rfc/rfc6762">RFC 6762 — Multicast DNS</a>
+            <strong> · Protocol specification</strong>
+            <br><span>Explains one source of useful local hostnames.</span>
+          </li>
+        
+          <li>
+            <a href="https://nmap.org/book/man-host-discovery.html">Nmap host discovery</a>
+            <strong> · Documentation</strong>
+            <br><span>Reference for separating host discovery from broader port scanning.</span>
+          </li>
+        
+      </ul>
+    </aside>
+  
+
+  
+  
+    <aside class="connections">
+      <h2>Related notes</h2>
+      <ul>
+        <li><a href="/previews/pr-16/notes/openclaw-update-lan-access-loss/">The OpenClaw update that silently lost LAN access</a></li><li><a href="/previews/pr-16/notes/giving-hermes-jobs-without-keys/">Constrained delegation to a local Hermes agent</a></li><li><a href="/previews/pr-16/notes/direct-rtsp-versus-transcoding/">Direct RTSP versus transcoding</a></li><li><a href="/previews/pr-16/notes/installing-hermes-on-a-vm/">Running Hermes Agent in an isolated Ubuntu VM</a></li>
+      </ul>
+    </aside>
+  
+
+  
+  
+</article>
+</main>
+    <footer>Built from Markdown. No trackers, adverts or algorithmic nonsense.</footer>
+  </body>
+</html>

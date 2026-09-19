@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 460" role="img" aria-labelledby="t d"><title id="t">Windows and Ubuntu sharing one Ryzen GPU</title><desc id="d">One RTX 5060 Ti, one NTFS model store, two operating systems booting the same llama.cpp workload.</desc><rect width="960" height="460" rx="28" fill="#f7f3ea"/><g font-family="system-ui,sans-serif" text-anchor="middle">
+<text x="480" y="50" font-size="26" font-weight="700" fill="#17233d">Same PC, same GPU, two boot paths</text>
+<rect x="90" y="90" width="330" height="120" rx="18" fill="#2f5d8a"/><text x="255" y="130" font-size="20" font-weight="700" fill="white">Windows 11</text><text x="255" y="158" font-size="15" fill="white">llama.cpp CUDA build</text><text x="255" y="180" font-size="15" fill="white">native NTFS model store</text>
+<rect x="540" y="90" width="330" height="120" rx="18" fill="#3f7d5c"/><text x="705" y="130" font-size="20" font-weight="700" fill="white">Ubuntu (2nd NVMe)</text><text x="705" y="158" font-size="15" fill="white">llama.cpp CUDA/Blackwell build</text><text x="705" y="180" font-size="15" fill="white">/mnt/windows read/write mount</text>
+<path d="M255 210v70" stroke="#64748b" stroke-width="4" fill="none"/><path d="M705 210v70" stroke="#64748b" stroke-width="4" fill="none"/>
+<path d="M255 280h450" stroke="#64748b" stroke-width="4" fill="none"/>
+<rect x="330" y="280" width="300" height="80" rx="18" fill="#17233d"/><text x="480" y="313" font-size="19" font-weight="700" fill="white">RTX 5060 Ti 16GB</text><text x="480" y="338" font-size="14" fill="white">one GPU, one model file, no duplicate downloads</text>
+<text x="480" y="410" font-size="17" font-weight="700" fill="#17233d">Result: near-identical tok/s once the same GGUF and build are used</text>
+<text x="480" y="436" font-size="15" fill="#475569">The real Stage 2 win was BootNext dual-boot control, not a raw speed difference</text>
+</g></svg>

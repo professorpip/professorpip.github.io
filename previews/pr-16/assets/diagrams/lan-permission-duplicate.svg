@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" role="img" aria-labelledby="t d"><title id="t">One duplicate macOS permission entry breaking LAN access</title><desc id="d">An OpenClaw update created a second Local Network permission entry for the same process; the disabled duplicate silently blocked LAN peer access until found and re-enabled.</desc><rect width="960" height="420" rx="28" fill="#f7f3ea"/><g font-family="system-ui,sans-serif" text-anchor="middle">
+<text x="480" y="48" font-size="25" font-weight="700" fill="#17233d">One disabled duplicate, total LAN silence</text>
+<rect x="120" y="90" width="330" height="90" rx="16" fill="#3f7d5c"/><text x="285" y="128" font-size="18" font-weight="700" fill="white">node (entry A)</text><text x="285" y="155" font-size="14" fill="white">enabled — old binary path</text>
+<rect x="510" y="90" width="330" height="90" rx="16" fill="#8a3b53"/><text x="675" y="128" font-size="18" font-weight="700" fill="white">node (entry B)</text><text x="675" y="155" font-size="14" fill="white">disabled — new updated binary path</text>
+<path d="M285 180v50" stroke="#64748b" stroke-width="4" fill="none"/>
+<path d="M675 180v50" stroke="#64748b" stroke-width="4" fill="none"/>
+<rect x="330" y="250" width="300" height="70" rx="16" fill="#17233d"/><text x="480" y="282" font-size="18" font-weight="700" fill="white">Local Network permission gate</text><text x="480" y="305" font-size="13" fill="white">macOS silently blocks the disabled entry's traffic</text>
+<path d="M480 320v40" stroke="#64748b" stroke-width="4" fill="none"/>
+<rect x="330" y="370" width="300" height="0" fill="none"/>
+<text x="480" y="392" font-size="17" font-weight="700" fill="#a86b2e">Result: HA/OPNsense wrongly suspected first</text>
+</g></svg>

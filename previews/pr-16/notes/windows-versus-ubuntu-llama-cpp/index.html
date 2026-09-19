@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Windows versus Ubuntu for llama.cpp on the same Ryzen PC · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <link rel="stylesheet" href="/previews/pr-16/assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/previews/pr-16/">Phil &amp; Tiggy&#39;s Lab Notes</a>
+      <nav aria-label="Main navigation">
+        <a href="/previews/pr-16/topics/">Topics</a>
+        <a href="/previews/pr-16/search/">Search</a>
+        <a href="/previews/pr-16/about/">About</a>
+      </nav>
+    </header>
+    <main data-pagefind-body><article class="note">
+  <h1>Windows versus Ubuntu for llama.cpp on the same Ryzen PC</h1>
+  
+  <p class="eyebrow project-period">Project period · <time datetime="2026-08-31T00:00:00.000Z">August-September 2026</time></p>
+  <p class="standfirst">Adding a second NVMe with Ubuntu let the same Ryzen GPU run llama.cpp from either OS off one shared model store, with dual-boot control turning out to matter more than raw speed.</p>
+  
+    <ul class="topic-chips" aria-label="Topics">
+      <li><a href="/previews/pr-16/topics/local-ai/">Local AI</a></li><li><a href="/previews/pr-16/topics/ryzen/">Ryzen</a></li><li><a href="/previews/pr-16/topics/inference/">Inference</a></li><li><a href="/previews/pr-16/topics/hardware-reuse/">Hardware Reuse</a></li>
+    </ul>
+  
+  <div class="prose"><h2>In brief</h2>
+<ul>
+<li>A second NVMe drive let a Windows gaming/LLM PC dual-boot into Ubuntu without touching the existing Windows install.</li>
+<li>A persistent, boot-safe NTFS mount let both operating systems share one model file store, so nothing had to be downloaded twice.</li>
+<li>Once builds and quantisation matched, llama.cpp performance on the same GPU was close between Windows and Ubuntu — the practical win was safe, one-shot dual-boot control, not raw speed.</li>
+<li>Ubuntu-side wake-on-LAN after shutdown stayed unreliable despite several fixes, while Windows-side WoL worked cleanly.</li>
+<li>A later DDR4 memory-frequency bump helped CPU/MoE-heavy models modestly and did nothing for GPU-resident ones, showing the two boot environments still exposed genuinely different bottlenecks.</li>
+</ul>
+<figure class="article-figure"><img src="/previews/pr-16/assets/diagrams/windows-ubuntu-shared-gpu.svg" alt="Diagram of one RTX 5060 Ti and one NTFS model store shared between a Windows and an Ubuntu boot on the same PC" loading="lazy" decoding="async"><figcaption>Both operating systems reached the same GPU and the same model files; only the boot path and driver stack changed.</figcaption></figure>
+<h2>Question</h2>
+<p>The Ryzen 9 3950X / RTX 5060 Ti 16GB PC (<code>RyzenPW</code>) had been a Windows-only local-LLM box, using Windows llama.cpp builds against a growing Hugging Face model collection. Phil installed Ubuntu Server on a second NVMe to get a proper Linux local-LLM platform without losing the existing Windows setup or its downloaded models. The real question wasn’t “which OS is faster” in the abstract — it was whether the same GPU, the same model files, and the same day-to-day workflow could genuinely serve both operating systems, and what would actually change once that was true.</p>
+<h2>Setup</h2>
+<p>Windows 11 stayed on the original 2TB WD_BLACK SN850X NVMe, untouched. Ubuntu Server went on a separate NVMe with its own boot entry. Passwordless SSH with sudo was set up for the Ubuntu side (<code>ryzen-ubuntu</code> / hostname <code>ryzehl</code>), matching the existing Windows SSH access. The GPU driver stack (NVIDIA 595.84, CUDA 13.1) and a current <code>ggml-org/llama.cpp</code> CUDA/Blackwell build (<code>sm_120a</code>) were installed fresh on Ubuntu, requiring a small patch to CUDA 13.1’s <code>math_functions.h</code> for <code>rsqrt</code>/<code>rsqrtf</code> declarations under Ubuntu’s glibc.</p>
+<h2>What we tried</h2>
+<p><strong>Boot-safe, reversible dual-boot.</strong> Rather than making Ubuntu or Windows the sole default, Tiggy set Ubuntu as the persistent default boot OS and used the UEFI BootNext mechanism for one-shot Windows boots, so a normal reboot always returns to Ubuntu without a lasting BIOS change. This kept both operating systems available without a boot-order fight every time either one was needed for a specific job.</p>
+<p><strong>Sharing the model store instead of duplicating it.</strong> Windows hibernation and Fast Startup were disabled (<code>powercfg /hibernate off</code>) so the Windows NTFS volume was always in a state safe for external read/write access. Ubuntu then got a persistent, UUID-keyed, boot-safe (<code>nofail</code>) mount of the Windows C: drive at <code>/mnt/windows</code>. This exposed the existing Windows-side GGUF collection to Ubuntu directly — the same Qwen3.8-27B-class quantisations already downloaded and tested on Windows became testable from Ubuntu’s newer CUDA/Blackwell build without another multi-gigabyte download.</p>
+<p><strong>A genuine like-for-like comparison.</strong> With the shared mount in place, Tiggy ran the same previously-tested Windows GGUF directly from <code>/mnt/windows</code> under the Ubuntu llama.cpp build, rather than a different model or a different build on each side. Historical Windows-side results and the fresh Ubuntu-side run became directly comparable for the first time, establishing the pattern for future comparisons: never re-download a model just to move operating systems.</p>
+<p><strong>Where the OS choice stopped mattering.</strong> Once quantisation, context size, KV-cache mode and build were held constant, the underlying llama.cpp inference numbers were close between Windows and Ubuntu on the same GPU — as expected, since both were driving the same NVIDIA CUDA stack on the same silicon. The interesting differences turned out to live elsewhere: file-system I/O and boot/power behaviour, not raw token generation.</p>
+<p><strong>Where it didn’t.</strong> A separate NVMe throughput test exposed a real filesystem-layer gap: the faster raw drive (WD_BLACK SN850X, ~3.61 GB/s) achieved only ~0.96 GB/s through the <code>/mnt/windows</code> NTFS-3G/FUSE path in a real <code>io_uring</code>-heavy workload, versus ~1.94 GB/s from a native Ubuntu ext4 drive doing the same job. The lesson: NTFS-3G is fine for casually sharing already-loaded model files, but is not the drive to build a serious I/O-bound Linux workload on top of.</p>
+<p><strong>Power and wake behaviour diverged sharply.</strong> Windows-initiated shutdown-then-wake-on-LAN worked reliably. Ubuntu-initiated shutdown-then-WoL did not, even after enabling standby power, Netplan WoL configuration, a shutdown hook, PCIe wake, disabling Energy-Efficient Ethernet, and setting the BIOS “Restore AC Power Loss” option to Power On. This remained an open, deliberately parked problem — later addressed separately with dedicated physical recovery hardware rather than a further OS-level fix.</p>
+<p><strong>A later, separately-tested memory tweak showed the two boot environments still have different bottlenecks.</strong> Increasing DDR4 from 2666 to 2933 MT/s (at 1.35V, DOCP) produced no measurable change for GPU-resident models like Dirk (43.16 → 43.12 tok/s), but a modest, repeatable ~5-6% generation uplift for the CPU/MoE-heavy Flash-Next Q2 profile (16.0 → 16.9 tok/s). This confirmed that “the OS doesn’t matter for speed” only held once a workload was safely inside VRAM; CPU-offloaded MoE work stayed sensitive to system memory bandwidth regardless of which OS was running it.</p>
+<h2>Result</h2>
+<p>The practical outcome was not a performance verdict but an operating model: one Ryzen PC, two operating systems, one shared model library, and a safe, reversible way to move between them without re-downloading anything or risking the working Windows install. Raw llama.cpp throughput on the GPU itself was close to identical across OSes once builds matched. The genuinely useful engineering differences were in filesystem behaviour under a cross-OS mount and in power/wake reliability, not in inference speed — and Ubuntu-side WoL remained a known, unresolved gap at the end of this stage.</p>
+<h2>What we would do next</h2>
+<p>Ubuntu-shutdown wake-on-LAN is still unsolved by OS-level configuration alone; a physical recovery path (servo button-presser plus JetKVM) was the eventual answer, covered in a later note. A further DDR4 timing pass, beyond the conservative frequency-only bump made here, was intentionally deferred pending a longer stability soak. The Windows/Ubuntu comparator itself is now reusable: any future GGUF or build change can be tested on both operating systems from the same shared model store without new downloads.</p>
+</div>
+
+  
+    <aside class="connections resources">
+      <h2>References and resources</h2>
+      <ul>
+        
+          <li>
+            <a href="https://github.com/ggml-org/llama.cpp">llama.cpp</a>
+            <strong> · Source repository</strong>
+            <br><span>The inference engine benchmarked identically on both operating systems.</span>
+          </li>
+        
+          <li>
+            <a href="https://github.com/tuxera/ntfs-3g">NTFS-3G</a>
+            <strong> · Source repository</strong>
+            <br><span>The driver behind the persistent read/write Windows NTFS mount used from Ubuntu.</span>
+          </li>
+        
+      </ul>
+    </aside>
+  
+
+  
+  
+    <aside class="connections">
+      <h2>Related notes</h2>
+      <ul>
+        <li><a href="/previews/pr-16/notes/16gb-vram-local-model-shootout/">The 16 GB VRAM local-model shootout</a></li><li><a href="/previews/pr-16/notes/building-gcse-local-llm-benchmark/">Building a GCSE benchmark for local LLMs</a></li><li><a href="/previews/pr-16/notes/why-vram-fit-beat-parameters/">Why fitting in VRAM beat having more parameters</a></li><li><a href="/previews/pr-16/notes/midge-real-work-benchmark/">Benchmarking five models on the real work a home-lab agent does</a></li>
+      </ul>
+    </aside>
+  
+
+  
+  
+</article>
+</main>
+    <footer>Built from Markdown. No trackers, adverts or algorithmic nonsense.</footer>
+  </body>
+</html>

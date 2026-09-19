@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Can a local AI agent harness do real work? · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <link rel="stylesheet" href="/previews/pr-16/assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/previews/pr-16/">Phil &amp; Tiggy&#39;s Lab Notes</a>
+      <nav aria-label="Main navigation">
+        <a href="/previews/pr-16/topics/">Topics</a>
+        <a href="/previews/pr-16/search/">Search</a>
+        <a href="/previews/pr-16/about/">About</a>
+      </nav>
+    </header>
+    <main data-pagefind-body><article class="note">
+  <h1>Can a local AI agent harness do real work?</h1>
+  
+  <p class="eyebrow project-period">Project period · <time datetime="2026-09-04T00:00:00.000Z">September 2026</time></p>
+  <p class="standfirst">A constant-model harness bake-off showed that useful artefacts are not the same as verified completion.</p>
+  
+    <ul class="topic-chips" aria-label="Topics">
+      <li><a href="/previews/pr-16/topics/agent-architecture/">Agent Architecture</a></li><li><a href="/previews/pr-16/topics/local-ai/">Local AI</a></li><li><a href="/previews/pr-16/topics/evaluation/">Evaluation</a></li><li><a href="/previews/pr-16/topics/hermes/">Hermes</a></li>
+    </ul>
+  
+  <div class="prose"><h2>In brief</h2>
+<ul>
+<li>We held the local model constant and compared Hermes, DeepSeek Harness and Pi.</li>
+<li>All could inspect documentation, write scripts and create real files.</li>
+<li>DeepSeek and Pi both failed a strict finance task by missing required filenames.</li>
+<li>Pi even declared success after the external verifier had effectively failed.</li>
+<li>A local agent becomes useful when the harness makes verification part of “done”.</li>
+</ul>
+<p>An <strong>agent harness</strong> wraps a language model with tools, working memory, execution rules and a definition of when work is complete. A fluent answer from the model proves little about that surrounding system. We held the model endpoint constant and asked three harnesses—Hermes Agent, DeepSeek Harness and Pi—to leave behind artefacts which an independent program could accept or reject.</p>
+<figure class="article-figure"><img src="/previews/pr-16/assets/diagrams/local-agent-work.svg" alt="Three agent harnesses feeding the same model and external verifier" loading="lazy" decoding="async"><figcaption>Holding the model constant isolates what the harness contributes to reliable work.</figcaption></figure>
+<h2>A fairer comparison</h2>
+<p>Every candidate used the same 32K Qwen-based endpoint. The tasks included an <code>openpyxl</code> exercise which required documentation lookup and a finance data-join task with exact output names and formats. Prompts, workspaces, logs and verifier results were preserved.</p>
+<p>DeepSeek Harness and Pi both passed the workbook task. They inspected the local API, wrote durable Python scripts, executed them and produced valid workbooks. Pi took <strong>55 seconds and 14 tool calls</strong>; DeepSeek took <strong>133 seconds and 27 calls</strong>.</p>
+<p>The finance task was more revealing. DeepSeek wrote a reasonable deterministic solution but placed and named the outputs differently from the contract. It then exceeded the 32K context during a compaction attempt. Pi caught and repaired a real join-key bug, produced useful reconciliation files, but also used the wrong output names. Its final message confidently said the job was done.</p>
+<p>Under a human glance, both attempts looked productive. Under the unchanged acceptance gate, both failed.</p>
+<h2>What the harness changes</h2>
+<p>The model supplied the language and code, but the harness controlled its working memory, edit tools, logs, termination and view of failure. Pi had the clearest JSON event stream and showed genuine incremental repair. DeepSeek’s compressed session log was auditable but less convenient, and its minimal path was context-fragile. Hermes remained the most useful capability per unit of setup, despite its own qualified results.</p>
+<p>The experiment also checked OpenClaw-style task execution and later repeated selected work through Hermes with stronger models. Better models improved judgement, but exact filenames and formats still failed. The missing component was not another leaderboard point; it was a gate the model could not wave away.</p>
+<h2>Result</h2>
+<p>A local agent can do real work: research an API, write and repair code, execute it and create useful artefacts. It cannot be trusted merely because those artefacts look plausible.</p>
+<p>Our next-harness rule became simple: expose the external verifier as a first-class step, allow repair, and forbid a clean final state until it passes. Reliability is an architectural property of the loop, not a personality trait of the model.</p>
+</div>
+
+  
+    <aside class="connections resources">
+      <h2>References and resources</h2>
+      <ul>
+        
+          <li>
+            <a href="https://github.com/NousResearch/hermes-agent">Hermes Agent</a>
+            <strong> · Agent runtime</strong>
+            <br><span>The incumbent local harness in the comparison.</span>
+          </li>
+        
+          <li>
+            <a href="https://github.com/deepseek-ai/DeepSeek-Harness">DeepSeek AI Harness</a>
+            <strong> · Agent runtime</strong>
+            <br><span>The developer-preview harness tested through its headless profile.</span>
+          </li>
+        
+          <li>
+            <a href="https://github.com/badlogic/pi-mono">Pi coding agent</a>
+            <strong> · Agent runtime</strong>
+            <br><span>The event-streaming coding harness used for the third comparison.</span>
+          </li>
+        
+      </ul>
+    </aside>
+  
+
+  
+  
+    <aside class="connections">
+      <h2>Related notes</h2>
+      <ul>
+        <li><a href="/previews/pr-16/notes/midge-real-work-benchmark/">Benchmarking five models on the real work a home-lab agent does</a></li><li><a href="/previews/pr-16/notes/installing-hermes-on-a-vm/">Running Hermes Agent in an isolated Ubuntu VM</a></li><li><a href="/previews/pr-16/notes/why-moshika-was-wrong-for-tiggy/">Why Moshika was the wrong voice model for an OpenClaw agent</a></li><li><a href="/previews/pr-16/notes/giving-hermes-jobs-without-keys/">Constrained delegation to a local Hermes agent</a></li>
+      </ul>
+    </aside>
+  
+
+  
+  
+</article>
+</main>
+    <footer>Built from Markdown. No trackers, adverts or algorithmic nonsense.</footer>
+  </body>
+</html>

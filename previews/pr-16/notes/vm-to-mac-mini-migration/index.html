@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Migrating an OpenClaw agent from a VM to a Mac mini without losing continuity · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <link rel="stylesheet" href="/previews/pr-16/assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/previews/pr-16/">Phil &amp; Tiggy&#39;s Lab Notes</a>
+      <nav aria-label="Main navigation">
+        <a href="/previews/pr-16/topics/">Topics</a>
+        <a href="/previews/pr-16/search/">Search</a>
+        <a href="/previews/pr-16/about/">About</a>
+      </nav>
+    </header>
+    <main data-pagefind-body><article class="note">
+  <h1>Migrating an OpenClaw agent from a VM to a Mac mini without losing continuity</h1>
+  
+  <p class="eyebrow project-period">Project period · <time datetime="2026-05-03T00:00:00.000Z">May 2026</time></p>
+  <p class="standfirst">Moving a personal assistant&#39;s identity from two aging VM instances onto a dedicated always-on Mac mini meant deciding exactly what continuity to keep and what dangerous state to deliberately leave behind.</p>
+  
+    <ul class="topic-chips" aria-label="Topics">
+      <li><a href="/previews/pr-16/topics/tiggy/">Tiggy</a></li><li><a href="/previews/pr-16/topics/openclaw/">OpenClaw</a></li><li><a href="/previews/pr-16/topics/agent-architecture/">Agent Architecture</a></li><li><a href="/previews/pr-16/topics/reliability/">Reliability</a></li><li><a href="/previews/pr-16/topics/hardware-reuse/">Hardware Reuse</a></li>
+    </ul>
+  
+  <div class="prose"><h2>In brief</h2>
+<ul>
+<li>Two earlier VM-hosted instances of the same assistant had drifted into a confusing three-instance landscape, one worked but was messy, one was a fresh but slower stand-in.</li>
+<li>A new Mac mini was set up as a dedicated, always-on, least-privilege host, with a standard non-admin macOS account running the assistant.</li>
+<li>Migration was deliberately selective: memories, persona and tool notes moved; credentials, auth state, sessions, cron state and device identity did not.</li>
+<li>A brief post-cutover identity glitch, the assistant answering as the wrong prior model, was caught and fixed by explicitly rewriting identity files rather than assuming the migration was clean.</li>
+<li>The result established a durable host pattern reused for later projects: standard-user service account, GUI auto-login plus immediate lock, and always-on power settings.</li>
+</ul>
+<figure class="article-figure"><img src="/previews/pr-16/assets/diagrams/vm-to-macmini-migration.svg" alt="Diagram showing two prior VM instances feeding a selective merge into a new Mac mini identity, deliberately excluding credentials and scheduler state" loading="lazy" decoding="async"><figcaption>The migration copied curated context, not a raw backup restore.</figcaption></figure>
+<h2>Question</h2>
+<p>An assistant that had been running as “Tiggy” for a couple of months on a Linux VM had degraded: a git-based update/recovery attempt had left it in a messy state, and a second, newer VM instance (“Tiggy2”) had been stood up as a working stand-in but suffered slow-reply issues of its own. That left three simultaneously running instances answering to overlapping identities, on two different Ubuntu VMs and no dedicated hardware. The question was how to consolidate onto one clean, dedicated, always-on host — a new Mac mini M4 — without losing the assistant’s accumulated memory and personality, and without dragging forward whatever had actually broken the original instance.</p>
+<h2>Setup</h2>
+<p>The Mac mini M4 was connected over wired Ethernet with a DHCP reservation and given a stable identity (<code>tiggy.lan</code>, ComputerName “Tiggy Mac mini”). Two macOS accounts were created deliberately: <code>phil</code>, an admin account for setup and oversight, and <code>tiggy</code>, a standard non-admin account intended to run the assistant day to day — establishing a least-privilege split from the very first install rather than retrofitting it later. Power settings were set for always-on operation (disabled sleep and disk sleep, short display sleep, auto-restart and Wake on LAN enabled). OpenClaw was installed under the standard <code>tiggy</code> account using the framework’s own one-line setup script.</p>
+<p>Both prior instances were reachable over the LAN: the original VM at one address, running an older git-based install; Tiggy2 at another, running an npm-based install. A temporary broad NFS export from both VMs’ home directories gave the new Mac mini read access to their state during migration — explicitly flagged at the time as a broad, LAN-wide read/write export that needed tightening or removal once migration was done.</p>
+<h2>What we tried</h2>
+<p><strong>Getting a clean install running and verified before touching any old state.</strong> Rather than starting migration by copying files across, the new Mac mini’s OpenClaw install was independently verified first: gateway running, LaunchAgent loaded, a scripted “reply with exactly” round-trip test confirmed the right model was live end to end, and the message-owner allowlist was set before any old context arrived. This meant the migration target was a known-good baseline, not an unknown quantity being modified live.</p>
+<p><strong>Backing up both source instances before reading anything from them.</strong> Both VMs were archived to compressed tarballs on the Mac mini before any selective copying began, giving a rollback point independent of whatever state the live migration script chose to touch.</p>
+<p><strong>A deliberately narrow definition of “continuity.”</strong> The instruction that shaped the whole migration was explicit: copy memories, persona, tool notes, birthdays, migration documentation and old runbooks, but do <strong>not</strong> blindly copy <code>openclaw.json</code>, credentials, auth state, sessions, cron state, or device identity from either old instance. Practically, this meant the Mac mini kept the parts of the assistant’s identity that make it feel continuous — its accumulated knowledge and voice — while discarding exactly the state most likely to be stale, VM-specific, or actively responsible for whatever had gone wrong originally. A stale, no-longer-relevant bootstrap file was deliberately moved aside rather than deleted outright, preserving it as an artefact without letting it confuse the running assistant.</p>
+<p><strong>Catching an identity glitch rather than assuming success.</strong> Shortly after cutover, the bot briefly answered as if it were a different underlying model, i.e. the older Tiggy2 instance’s identity bleeding through. Rather than treating the migration as complete once files had moved, this was caught as a live symptom and fixed directly: <code>IDENTITY.md</code> and <code>MEMORY.md</code> were rewritten to explicitly state that the current assistant is Tiggy on the Mac mini, and that the original VM and Tiggy2 were prior context, not parallel live identities. Tiggy2 was kept, powered down, purely as a continuity backup rather than a second running instance.</p>
+<p><strong>Building a durable host pattern, not a one-off setup.</strong> The specific choices made for the Mac mini — a non-admin service account, GUI auto-login into that account followed by an immediate screen lock (chosen because per-user LaunchAgents and GUI/TCC/Keychain behaviour are materially easier inside a real login session than in a fully headless one), and always-on power settings — became the standard host pattern reused for later projects on the same machine, rather than a bespoke one-time fix.</p>
+<h2>Result</h2>
+<p>The original VM instance was shut down with no intention of restarting it. Tiggy2 remained as a dormant backup, not a competing live instance. The Mac mini became the sole primary, verified end to end: OpenClaw at a known version, gateway running as a LaunchAgent, Telegram delivery working, cron jobs re-enabled after a local CLI scope issue was fixed, and a clean reboot test proving the auto-login/lock/gateway-start sequence survived a real restart. The one genuine failure caught during migration — the brief cross-instance identity confusion — was resolved by explicit correction rather than being missed.</p>
+<h2>What we would do next</h2>
+<p>The broad LAN-wide NFS export used for migration convenience needed tightening or removal once the selective copy was complete, and this was flagged at the time as follow-up rather than left implicit. The least-privilege account split adopted here (standard user running the assistant, separate admin account for setup) proved durable enough to become the default posture for later hardware, rather than a decision that needed revisiting each time.</p>
+</div>
+
+  
+    <aside class="connections resources">
+      <h2>References and resources</h2>
+      <ul>
+        
+          <li>
+            <a href="https://github.com/openclaw/openclaw">OpenClaw</a>
+            <strong> · Source repository</strong>
+            <br><span>The assistant framework being migrated between hosts.</span>
+          </li>
+        
+      </ul>
+    </aside>
+  
+
+  
+  
+    <aside class="connections">
+      <h2>Related notes</h2>
+      <ul>
+        <li><a href="/previews/pr-16/notes/tiggys-tiered-brain/">A tiered model architecture for an OpenClaw agent</a></li><li><a href="/previews/pr-16/notes/live-voice-tiggy-iphone/">Building an iPhone voice interface for an OpenClaw agent</a></li><li><a href="/previews/pr-16/notes/local-failover-orphan-process/">Local-model failover and the orphan-process bug</a></li><li><a href="/previews/pr-16/notes/openclaw-update-lan-access-loss/">The OpenClaw update that silently lost LAN access</a></li>
+      </ul>
+    </aside>
+  
+
+  
+  
+</article>
+</main>
+    <footer>Built from Markdown. No trackers, adverts or algorithmic nonsense.</footer>
+  </body>
+</html>
