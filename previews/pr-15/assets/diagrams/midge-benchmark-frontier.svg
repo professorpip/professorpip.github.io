@@ -1,17 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" role="img" aria-labelledby="t d"><title id="t">Midge real-work benchmark results by model</title><desc id="d">Five candidate models scored against 18 frozen routine and senior tasks, split into overall points and passes.</desc><rect width="960" height="520" rx="28" fill="#f7f3ea"/><g font-family="system-ui,sans-serif" text-anchor="middle"><text x="480" y="50" font-size="26" font-weight="700" fill="#17233d">18 frozen tasks, five candidates</text><text x="480" y="78" font-size="16" fill="#475569">9 routine Midge tasks + 9 senior Tiggy tasks, scored 0-10 each</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" role="img" aria-labelledby="t d"><title id="t">Midge real-work benchmark v1.1 results by model</title><desc id="d">Five candidate models scored against the frozen v1.1 18-task suite, split into overall points and passes.</desc><rect width="960" height="520" rx="28" fill="#f7f3ea"/><g font-family="system-ui,sans-serif" text-anchor="middle"><text x="480" y="50" font-size="26" font-weight="700" fill="#17233d">18 frozen tasks, five candidates (v1.1)</text><text x="480" y="78" font-size="16" fill="#475569">9 routine Midge tasks + 9 senior Tiggy tasks, scored 0-10 each</text>
 <g font-size="15" font-weight="700" fill="white">
-<rect x="60" y="120" width="150" height="290" rx="14" fill="#17233d"/><text x="135" y="145" fill="white">GPT-5.6 Sol</text>
-<rect x="230" y="150" width="150" height="260" rx="14" fill="#2f5d8a"/><text x="305" y="175" fill="white">Claude Sonnet 5</text>
-<rect x="400" y="185" width="150" height="225" rx="14" fill="#3f7d5c"/><text x="475" y="210" fill="white">Dirk Q4</text>
-<rect x="570" y="205" width="150" height="205" rx="14" fill="#a86b2e"/><text x="645" y="230" fill="white">Qwen Next</text>
-<rect x="740" y="245" width="150" height="165" rx="14" fill="#8a3b53"/><text x="815" y="270" fill="white">Bartowski Q3</text>
+<rect x="60" y="112" width="150" height="298" rx="14" fill="#17233d"/><text x="135" y="137" fill="white">GPT-5.6 Sol</text>
+<rect x="230" y="136" width="150" height="274" rx="14" fill="#2f5d8a"/><text x="305" y="161" fill="white">Claude Sonnet 5</text>
+<rect x="400" y="147" width="150" height="263" rx="14" fill="#3f7d5c"/><text x="475" y="172" fill="white">Dirk Q4/KVarN</text>
+<rect x="570" y="152" width="150" height="258" rx="14" fill="#a86b2e"/><text x="645" y="177" fill="white">Qwen Next</text>
+<rect x="740" y="191" width="150" height="219" rx="14" fill="#8a3b53"/><text x="815" y="216" fill="white">Bartowski Q3</text>
 </g>
 <g font-size="20" font-weight="700" fill="white">
-<text x="135" y="260">164/180</text><text x="135" y="285" font-size="15">16/18 passes</text>
-<text x="305" y="285">149/180</text><text x="305" y="310" font-size="15">15/18 passes</text>
-<text x="475" y="305">142/180</text><text x="475" y="330" font-size="15">10/18 passes</text>
-<text x="645" y="315">135/180</text><text x="645" y="340" font-size="15">11/18 passes</text>
-<text x="815" y="335">120/180</text><text x="815" y="360" font-size="15">7/18 passes</text>
+<text x="135" y="255">168/180</text><text x="135" y="280" font-size="15">18/18 passes</text>
+<text x="305" y="280">154/180</text><text x="305" y="305" font-size="15">16/18 passes</text>
+<text x="475" y="290">148/180</text><text x="475" y="315" font-size="15">11/18 passes</text>
+<text x="645" y="295">145/180</text><text x="645" y="320" font-size="15">13/18 passes</text>
+<text x="815" y="335">123/180</text><text x="815" y="360" font-size="15">8/18 passes</text>
 </g>
 <line x1="40" y1="410" x2="920" y2="410" stroke="#17233d" stroke-width="2"/>
 <text x="480" y="450" font-size="17" font-weight="700" fill="#17233d">Best benchmark score ≠ best Midge configuration</text>

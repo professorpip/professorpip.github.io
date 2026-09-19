@@ -31,8 +31,8 @@
 <ul>
 <li>Generic reasoning benchmarks don’t predict whether a model can safely do the actual routine and senior work a home-lab agent gets asked to do.</li>
 <li>18 frozen tasks, drawn from real jobs, were scored identically across GPT-5.6 Sol, Claude Sonnet 5, and three local Qwen3.8-27B-class candidates on the same RTX 5060 Ti.</li>
-<li>No model correctly proved a full backend-recovery task end to end, cloud or local.</li>
-<li>The best local point-scorer (Dirk) was not promoted, because the actual deployed model (Qwen Next) passed more of the specific routine tasks it is asked to do.</li>
+<li>The original run’s two backend-recovery tasks were underspecified rather than genuinely unpassable; a v1.1 rerun clarified the prompts, corrected scorer defects, and rescored every stored answer — after which every model passed at least one of the two recovery tasks and GPT passed both.</li>
+<li>The best local point-scorer (Dirk) still was not promoted, because the actual deployed model (Qwen Next) passed more of the specific routine tasks it is asked to do.</li>
 <li>The scorer itself needed a post-run integrity audit after a hidden hallucinated rubric requirement was found — a reminder that a benchmark’s grading code is also code that can be wrong.</li>
 </ul>
 <figure class="article-figure"><img src="/previews/pr-15/assets/diagrams/midge-benchmark-frontier.svg" alt="Bar chart of five models&#39; benchmark points and pass counts across 18 frozen tasks" loading="lazy" decoding="async"><figcaption>Dirk out-scored Qwen Next on points but passed fewer of the actual routine tasks Midge is asked to do.</figcaption></figure>
@@ -44,56 +44,68 @@
 <h2>What we tried</h2>
 <p><strong>Holding the harness constant.</strong> Every candidate saw the identical task prompt and evidence snapshot; only the model backend changed. This isolates model capability from prompt engineering or tool availability, at the cost of not testing live-tool reliability or repeatability — a single frozen run is a capability snapshot, not a statistical reliability claim.</p>
 <p><strong>Scoring for honesty, not just correctness.</strong> The rubric explicitly penalised invented facts, claiming an external action happened when it hadn’t, destructive or premature actions, missing verification, and narration after a task was already complete. This mattered in practice: Claude wrapped an exact-token answer in explanatory prose on one task and failed it outright, despite the underlying content being correct.</p>
-<p><strong>Full results.</strong></p>
+<p><strong>Full results (v1.1, the completed and frozen rerun).</strong></p>
 <table>
 <thead>
 <tr>
 <th>Model</th>
 <th style="text-align:right">Overall</th>
 <th style="text-align:right">Passes</th>
+<th style="text-align:right">Routine (of 9)</th>
+<th style="text-align:right">Senior (of 9)</th>
 <th>Position</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>GPT-5.6 Sol</td>
-<td style="text-align:right">164/180</td>
-<td style="text-align:right">16/18</td>
+<td style="text-align:right">168/180</td>
+<td style="text-align:right">18/18</td>
+<td style="text-align:right">9/9</td>
+<td style="text-align:right">9/9</td>
 <td>Senior Tiggy leader</td>
 </tr>
 <tr>
 <td>Claude Sonnet 5</td>
-<td style="text-align:right">149/180</td>
-<td style="text-align:right">15/18</td>
+<td style="text-align:right">154/180</td>
+<td style="text-align:right">16/18</td>
+<td style="text-align:right">7/9</td>
+<td style="text-align:right">9/9</td>
 <td>Strong backup; exact-output caveat</td>
 </tr>
 <tr>
 <td>Dirk Qwen3.8-27B IQ4_XS</td>
-<td style="text-align:right">142/180</td>
-<td style="text-align:right">10/18</td>
+<td style="text-align:right">148/180</td>
+<td style="text-align:right">11/18</td>
+<td style="text-align:right">6/9</td>
+<td style="text-align:right">5/9</td>
 <td>Best local points, not best local agent</td>
 </tr>
 <tr>
 <td>Qwen Next (deployed)</td>
-<td style="text-align:right">135/180</td>
-<td style="text-align:right">11/18</td>
+<td style="text-align:right">145/180</td>
+<td style="text-align:right">13/18</td>
+<td style="text-align:right">8/9</td>
+<td style="text-align:right">5/9</td>
 <td>Best actual Midge configuration</td>
 </tr>
 <tr>
 <td>Bartowski Q3_K_S</td>
-<td style="text-align:right">120/180</td>
-<td style="text-align:right">7/18</td>
+<td style="text-align:right">123/180</td>
+<td style="text-align:right">8/18</td>
+<td style="text-align:right">5/9</td>
+<td style="text-align:right">3/9</td>
 <td>Below the frontier</td>
 </tr>
 </tbody>
 </table>
-<p>Dirk’s higher point total did not translate into more passed tasks: Qwen Next passed two more routine tasks — including the safe config-change task — and matched both output-contract tasks, while Dirk’s extra points came disproportionately from senior tasks it still failed to complete reliably.</p>
-<p><strong>A finding that mattered more than the leaderboard.</strong> No candidate, cloud or local, passed either full backend-recovery task end to end. Every model, including GPT-5.6 Sol, restored a service conceptually without explicitly proving the real recovery path was live — a “looks fixed” answer rather than a checked one. The practical conclusion was procedural: production backend recovery needs a fixed, explicit restore-and-prove checklist regardless of which model is doing the work, because none of them supplied that discipline unprompted.</p>
-<p><strong>Auditing the scorer, not just the models.</strong> After the initial run, a review of the generic scoring code found several defects: an unprompted hidden requirement for a <code>status=draft_only</code> field nobody had asked for, read-only actions being misclassified as mutating, a false keyword match (<code>password is</code> triggering inside the phrase <code>password issuance</code>), and missed semantic equivalents for a few pass conditions. The model-facing prompts never changed; only the scorer was corrected, and every stored answer was rescored identically under the fixed rubric (suite v1.0.1). Retaining both the original and corrected suite hashes in the run manifest made the change auditable rather than silent.</p>
+<p>Dirk’s higher point total still did not translate into more passed tasks: Qwen Next passed two more routine tasks — including the safe config-change task — while Dirk’s extra points came disproportionately from senior tasks it still failed to complete reliably.</p>
+<p><strong>The original “nobody passed backend recovery” finding did not survive review.</strong> The first run’s two backend-recovery tasks (a stale-launcher restart and a collision recovery) turned out to be genuinely underspecified: they silently required proving an unstated Hermes/Midge end-to-end path, and one task’s phrase “both paths” never named which paths or which production model. A post-run audit reclassified both as underspecified-task defects (plus some literal-phrase scorer brittleness) rather than clean evidence of model incapability — confirmed by giving GPT an explicit checklist version of the same task in a diagnostic-only rerun, which it then passed. v1.1 corrected this by clarifying both prompts (naming the required proofs and the production profile explicitly) and by teaching the scorer to recognise structured equivalents (for example, <code>restart the launcher</code> alongside <code>restart_service</code> targeting the launcher, or <code>health</code>/<code>ready</code>/<code>readiness</code> as equivalents). Both changes were then tested separately: only stored v1 responses were rescored under the fixed scorer first (to isolate scorer-only effects, which moved most models by 1–2 points but changed no pass/fail outcome), and only afterwards were the two tasks rerun in fresh sessions against the clarified prompts. After the full v1.1 rerun, GPT-5.6 Sol passed both recovery tasks, Claude and the two stronger local models each passed one, and only Bartowski still failed one of the two — so the original blanket claim that nobody passed backend recovery no longer holds.</p>
+<p><strong>Auditing the scorer, not just the models.</strong> Separately from the recovery-task rework, a review of the generic scoring code found further defects: an unprompted hidden requirement for a <code>status=draft_only</code> field nobody had asked for, read-only actions being misclassified as mutating, a false keyword match (<code>password is</code> triggering inside the phrase <code>password issuance</code>), and a negation miss where <code>not deleted</code> was scored as if a delete had happened (which had been silently failing Qwen Next on one task). The model-facing prompts for tasks other than the two recovery tasks never changed; only the scorer was corrected, and every stored answer was rescored identically under the fixed rubric (suite v1.1.0). Retaining both the original and corrected suite hashes in the run manifest made the change auditable rather than silent.</p>
 <h2>Result</h2>
-<p>GPT-5.6 Sol was the clear senior-work leader, reliable across inspection, safe change design, diagnosis, code patches, and multi-stage judgement, with its only misses being the unproved recovery tasks. Claude Sonnet 5 was a close second and a credible cloud backup, with the single durable caveat that it cannot be trusted unguarded on tasks where byte-exact output is itself the requirement. Among local candidates, Qwen Next remained the better real Midge configuration despite a lower point total than Dirk, because it passed more of the specific routine tasks Midge is actually given; Dirk stayed useful as a benchmark baseline rather than a deployment candidate. Bartowski’s Q3_K_S quantisation, and a fourth transient candidate (GSQ-RCO IQ3_S-MTP) whose documented baseline already sat below Dirk’s, were both retired without full replay once the pattern was clear enough to satisfy the stop rule.</p>
+<p>GPT-5.6 Sol was the clear senior-work leader, reliable across inspection, safe change design, diagnosis, code patches, and multi-stage judgement, and after v1.1’s clarified recovery prompts it is the only model to clear the full 18/18. Claude Sonnet 5 was a close second and a credible cloud backup, matching GPT on all nine senior tasks but still missing two routine tasks, with the durable caveat that it cannot be trusted unguarded on tasks where byte-exact output is itself the requirement. Among local candidates, Qwen Next remained the better real Midge configuration despite a lower point total than Dirk, because it passed more of the specific routine tasks Midge is actually given (8/9 versus Dirk’s 6/9); Dirk stayed the highest local point-scorer and a useful benchmark baseline, but its weaker routine pass rate kept it out of deployment. Bartowski’s Q3_K_S quantisation, and a fourth transient candidate (GSQ-RCO IQ3_S-MTP) whose documented baseline already sat below Dirk’s, were both retired without full replay once the pattern was clear enough to satisfy the stop rule. v1.1 was frozen as the standing benchmark: its two recovery-task fixes were prompt clarifications and scorer corrections tested separately from each other and rescored transparently, not a retroactive rewrite of the leaderboard, and the model-selection conclusions above did not change from v1 to v1.1 — only the recovery-task pass counts and the accuracy of the “nobody passed” claim did.</p>
 <h2>What we would do next</h2>
-<p>The most actionable follow-up is building the missing piece every model lacked: a standard restore-and-prove checklist for backend recovery tasks, so that “the service looks up” is never accepted as equivalent to “the real Midge/Hermes path is proved live.” A second is treating benchmark scorer code with the same suspicion as the models under test — this run only caught its own rubric bugs because someone deliberately re-read the scoring logic after the fact, not before. A live-tool, repeated-trial version of this benchmark, rather than a single frozen simulated-trace run, would be the next real gate before trusting any of these results as an operational reliability claim.</p>
+<p>The most actionable follow-up, confirmed rather than superseded by v1.1, is a standard restore-and-prove checklist for backend recovery tasks in production, since even the clarified v1.1 prompts only tested planning against a frozen evidence snapshot, not live tool execution. A second is continuing to treat benchmark scorer code with the same suspicion as the models under test — this run caught two separate classes of scorer defect (hidden hallucinated fields and negation-parsing bugs) only because someone deliberately re-read the scoring logic after the fact. v1.1’s own future-work list is explicit that stateful executable fixtures, structured field-based scoring, and multiple repeats for high-variance recovery tasks belong in a separately designed v2, not retrofitted onto this frozen suite. A live-tool, repeated-trial version of this benchmark would be the next real gate before treating any of these pass rates as an operational reliability claim rather than a comparative snapshot.</p>
 </div>
 
   
