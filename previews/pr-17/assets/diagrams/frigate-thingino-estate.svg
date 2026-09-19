@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 460" role="img" aria-labelledby="t d"><title id="t">Building a low-cost multi-camera Frigate estate</title><desc id="d">Cheap Thingino-firmware cameras and consumer Tapo cameras feed one Frigate instance, moving from wasteful software transcoding to direct RTSP.</desc><rect width="960" height="460" rx="28" fill="#f7f3ea"/><g font-family="system-ui,sans-serif" text-anchor="middle">
+<text x="480" y="48" font-size="25" font-weight="700" fill="#17233d">Growing a camera estate without growing the bill</text>
+<rect x="60" y="90" width="220" height="80" rx="16" fill="#3f7d5c"/><text x="170" y="124" font-size="17" font-weight="700" fill="white">Thingino cameras</text><text x="170" y="150" font-size="13" fill="white">open-firmware, cheap D1 boards</text>
+<rect x="370" y="90" width="220" height="80" rx="16" fill="#2f5d8a"/><text x="480" y="124" font-size="17" font-weight="700" fill="white">Tapo/Reolink</text><text x="480" y="150" font-size="13" fill="white">consumer PoE/Wi-Fi cameras</text>
+<rect x="680" y="90" width="220" height="80" rx="16" fill="#a86b2e"/><text x="790" y="124" font-size="17" font-weight="700" fill="white">ONVIF PTZ</text><text x="790" y="150" font-size="13" fill="white">pan/tilt via Frigate arrows</text>
+<path d="M170 170v40h620v40" stroke="#64748b" stroke-width="4" fill="none"/>
+<path d="M480 170v80" stroke="#64748b" stroke-width="4" fill="none"/>
+<path d="M790 170v40h-310v40" stroke="#64748b" stroke-width="4" fill="none"/>
+<rect x="330" y="250" width="300" height="70" rx="16" fill="#17233d"/><text x="480" y="282" font-size="18" font-weight="700" fill="white">Frigate + Coral</text><text x="480" y="305" font-size="13" fill="white">config-API driven, backed up before every change</text>
+<path d="M480 320v40" stroke="#64748b" stroke-width="4" fill="none"/>
+<rect x="230" y="360" width="220" height="70" rx="16" fill="#8a3b53"/><text x="340" y="392" font-size="16" font-weight="700" fill="white">Wasteful path</text><text x="340" y="414" font-size="12" fill="white">forced ffmpeg H.264 transcode</text>
+<rect x="510" y="360" width="220" height="70" rx="16" fill="#3f7d5c"/><text x="620" y="392" font-size="16" font-weight="700" fill="white">Fixed path</text><text x="620" y="414" font-size="12" fill="white">direct RTSP, CPU halved</text>
+</g></svg>

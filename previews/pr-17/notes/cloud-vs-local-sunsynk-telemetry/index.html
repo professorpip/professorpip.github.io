@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Cloud versus local inverter telemetry with a SunSynk hybrid inverter · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <link rel="stylesheet" href="/previews/pr-17/assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/previews/pr-17/">Phil &amp; Tiggy&#39;s Lab Notes</a>
+      <nav aria-label="Main navigation">
+        <a href="/previews/pr-17/topics/">Topics</a>
+        <a href="/previews/pr-17/search/">Search</a>
+        <a href="/previews/pr-17/about/">About</a>
+      </nav>
+    </header>
+    <main data-pagefind-body><article class="note">
+  <h1>Cloud versus local inverter telemetry with a SunSynk hybrid inverter</h1>
+  
+  <p class="eyebrow project-period">Project period · <time datetime="2026-08-27T00:00:00.000Z">August 2026</time></p>
+  <p class="standfirst">When a SunSynk hybrid inverter&#39;s cloud-reported battery SOC stopped making sense, a local RS-485 to Modbus TCP bridge gave an independent, trustworthy view the cloud app couldn&#39;t provide alone.</p>
+  
+    <ul class="topic-chips" aria-label="Topics">
+      <li><a href="/previews/pr-17/topics/energy/">Energy</a></li><li><a href="/previews/pr-17/topics/home-assistant/">Home Assistant</a></li><li><a href="/previews/pr-17/topics/modbus/">Modbus</a></li><li><a href="/previews/pr-17/topics/monitoring/">Monitoring</a></li><li><a href="/previews/pr-17/topics/hardware-reuse/">Hardware Reuse</a></li>
+    </ul>
+  
+  <div class="prose"><h2>In brief</h2>
+<ul>
+<li>A SunSynk hybrid inverter’s cloud app started reporting an implausibly static ~90% battery SOC while cloud-visible charge/discharge cycling had effectively stopped.</li>
+<li>Home Assistant’s own recorder history didn’t go back far enough to confirm exactly when the fault began; SunSynk’s own cloud monthly-energy chart did, pinpointing the transition date.</li>
+<li>A direct RS-485 Modbus probe of the inverter, run before any cloud/local integration existed, proved the inverter itself was alive and answering correctly on the wire.</li>
+<li>A Raspberry Pi running <code>mbusd</code> turned that single RS-485 port into a shared Modbus TCP endpoint, letting Home Assistant read the inverter locally and continuously, independent of the cloud service.</li>
+<li>The eventual practical lesson went further than “add a local path”: once battery pack telemetry was available too, reported SOC itself turned out not to be trustworthy, and voltage/current/cell-delta became the real source of truth.</li>
+</ul>
+<figure class="article-figure"><img src="/previews/pr-17/assets/diagrams/sunsynk-cloud-vs-local.svg" alt="Diagram comparing the SunSynk cloud reporting path against a local RS-485-to-Modbus-TCP bridge feeding Home Assistant directly" loading="lazy" decoding="async"><figcaption>The cloud app and the local bridge could disagree, and only the local path could be independently cross-checked against pack-level data.</figcaption></figure>
+<h2>Question</h2>
+<p>A hybrid SunSynk inverter, charging batteries overnight on cheap tariff electricity and discharging them by day, had apparently stopped doing that useful cycling — while its cloud-facing app still reported the battery sitting at a suspiciously constant ~90% state of charge. Was this a real fault in the battery, the inverter, or the BMS, or was it simply that the only visibility into the system was a cloud service that might itself be wrong, stale, or misleading? The practical question was whether local, direct telemetry could give an independently trustworthy answer the cloud alone couldn’t.</p>
+<h2>Setup</h2>
+<p>The inverter is a SunSynk 3.6kW single-phase hybrid unit feeding a rack battery bank, normally monitored only through SunSynk’s own cloud app and a Home Assistant cloud-based integration. A Raspberry Pi (<code>solarpi</code>) with a USB-to-RS-485 (CH340) adapter was available to attempt a local wired connection to the inverter’s RS-485/Modbus port, as an alternative to relying solely on the cloud path.</p>
+<h2>What we tried</h2>
+<p><strong>Establishing the timeline before touching hardware.</strong> Home Assistant’s own recorder history only went back a matter of days, not far enough to see when the problem actually started. SunSynk’s own cloud monthly-energy chart, by contrast, covered the whole period and showed a clear, dateable transition: normal daily charge/discharge cycling through the first several days of July, followed by an unusual overnight SOC jump from about 20% straight to 90% on one specific date, after which cloud-reported SOC essentially froze near 90% while normal cycling stopped. This turned a vague “something’s wrong” into a specific, evidence-backed incident date to investigate further — using the cloud service’s own historical data as the timeline source, even while suspecting its live readings.</p>
+<p><strong>Proving the inverter was alive on the wire, before building any integration.</strong> Before wiring up any Modbus TCP gateway or Home Assistant integration, a passive listen on the RS-485 line at several common baud rates captured nothing — which doesn’t prove a wiring fault, since Modbus RTU devices commonly stay silent until actively polled. A follow-up active Modbus RTU read of holding register 0 at 9600 8N1, slave ID 1, got a valid, CRC-correct response. This single low-level check, done before any higher-level software existed, proved the physical RS-485 connection and wiring were correct and the inverter itself was responsive — ruling out an entire category of possible causes (bad cable, wrong polarity, dead port) before writing any integration code.</p>
+<p><strong>Turning one RS-485 port into a shared network resource.</strong> <a href="https://github.com/3cky/mbusd"><code>mbusd</code></a> was built from source and installed as a systemd service on the Raspberry Pi, listening on Modbus TCP port 502 and bridging to the RS-485 adapter at 9600 8N1. This let Home Assistant (and, notably, the same port, any future local tool) reach the inverter as a normal Modbus TCP endpoint over the LAN rather than needing direct serial access, verified end to end with a register read returning the correct value through the full TCP-to-serial path.</p>
+<p><strong>Adding the local path alongside the cloud path, not instead of it.</strong> Home Assistant’s existing cloud-based SunSynk integration was left in place, and a local Modbus-TCP-based add-on (<a href="https://github.com/kellerza/sunsynk">kellerza/sunsynk</a>) was configured to point at the new local bridge. The dashboard was deliberately restructured to show cloud and local readings side by side rather than silently replacing one with the other — treating the comparison itself as the useful artefact, not just the eventual “winner.”</p>
+<p><strong>Discovering the real problem was deeper than cloud-vs-local.</strong> Once four individual battery packs’ own BMS telemetry became independently visible over Bluetooth (a separate but related project), a clearer picture emerged: one pack’s reported state of charge diverged sharply from the other three at essentially the same pack voltage, and the inverter’s own reported SOC, whichever path reported it, tracked neither the healthy packs nor a physically plausible value. The eventual operating conclusion generalised beyond this one inverter: for this pack chemistry and BMS combination, reported SOC could not be trusted as a primary signal at all, and pack voltage, current-sharing between parallel packs, cell-voltage delta, and temperature had to be used as the real source of truth instead.</p>
+<h2>Result</h2>
+<p>The local RS-485/Modbus path proved itself independently trustworthy at the wire level before any software was layered on top, and gave a continuous, cloud-independent telemetry stream once <code>mbusd</code> and the local Home Assistant integration were running. The cloud app’s SOC reporting was ultimately shown to be following the same underlying, unreliable BMS-reported state-of-charge value as everything else — so the real fix wasn’t “trust local over cloud,” it was “stop trusting reported SOC from either path, and read the physical pack signals directly instead.”</p>
+<h2>What we would do next</h2>
+<p>The natural follow-up, once individual pack anomalies were visible, was a controlled, closely-watched charge test using only real electrical signals (voltage, current sharing, cell delta) to decide when to stop — never SOC alone. The RS-485/Modbus TCP bridge pattern proven here for the inverter is directly reusable for any other RS-485-speaking device that later needs a local, cloud-independent Home Assistant path.</p>
+</div>
+
+  
+    <aside class="connections resources">
+      <h2>References and resources</h2>
+      <ul>
+        
+          <li>
+            <a href="https://github.com/3cky/mbusd">mbusd</a>
+            <strong> · Source repository</strong>
+            <br><span>The RS-485-to-Modbus-TCP gateway daemon bridging the inverter&#39;s serial port to the LAN.</span>
+          </li>
+        
+          <li>
+            <a href="https://github.com/kellerza/sunsynk">Home Assistant Sunsynk multi add-on</a>
+            <strong> · Source repository</strong>
+            <br><span>The local Modbus-TCP integration used once the RS-485 bridge was working, replacing sole reliance on the cloud app.</span>
+          </li>
+        
+      </ul>
+    </aside>
+  
+
+  
+  
+    <aside class="connections">
+      <h2>Related notes</h2>
+      <ul>
+        <li><a href="/previews/pr-17/notes/local-sunsynk-telemetry/">Local SunSynk telemetry without the cloud</a></li><li><a href="/previews/pr-17/notes/health-check-broke-zigbee/">The health check that briefly broke Zigbee</a></li><li><a href="/previews/pr-17/notes/rescuing-old-sonoff-basics/">Rescuing old Sonoff Basics with Tasmota and ESPHome</a></li><li><a href="/previews/pr-17/notes/frigate-thingino-camera-estate/">Building a low-cost Frigate camera estate with Thingino</a></li>
+      </ul>
+    </aside>
+  
+
+  
+  
+</article>
+</main>
+    <footer>Built from Markdown. No trackers, adverts or algorithmic nonsense.</footer>
+  </body>
+</html>
