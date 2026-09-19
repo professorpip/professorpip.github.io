@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Mark 4 — pivoting live voice from a research rig to something Phil actually wants to use · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <link rel="stylesheet" href="/previews/pr-14/assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/previews/pr-14/">Phil &amp; Tiggy&#39;s Lab Notes</a>
+      <nav aria-label="Main navigation">
+        <a href="/previews/pr-14/topics/">Topics</a>
+        <a href="/previews/pr-14/search/">Search</a>
+        <a href="/previews/pr-14/about/">About</a>
+      </nav>
+    </header>
+    <main data-pagefind-body><article class="note">
+  <h1>Mark 4 — pivoting live voice from a research rig to something Phil actually wants to use</h1>
+  
+  <p class="eyebrow project-period">Project period · <time datetime="2026-09-17T00:00:00.000Z">September 2026</time></p>
+  <p class="standfirst">After a semantic-grounding research path stalled on a training-level limit, the team rebuilt on the proven transport and iterated on turn-taking and pacing until the verdict changed from &quot;not bad&quot; to &quot;really good.&quot;</p>
+  
+    <ul class="topic-chips" aria-label="Topics">
+      <li><a href="/previews/pr-14/topics/voice/">Voice</a></li><li><a href="/previews/pr-14/topics/agent-architecture/">Agent Architecture</a></li><li><a href="/previews/pr-14/topics/webrtc/">WebRTC</a></li><li><a href="/previews/pr-14/topics/product/">Product</a></li>
+    </ul>
+  
+  <div class="prose"><h2>In brief</h2>
+<ul>
+<li>An earlier eight-stage attempt to give a duplex speech model exact live knowledge of the world hit a training-level wall, not a wiring problem, and was set aside.</li>
+<li>Mark 4 instead built on the already-proven Mark 2 transport and treated voice as a product to be iterated, not a research target to be perfected.</li>
+<li>A strict “speak only checked answers, and prove pending work rather than claim it” policy fixed the model’s tendency to talk over itself or invent progress.</li>
+<li>A deliberate pacing/thinking-cue design closed most of the awkward silence without adding a false “I’m working on it” that wasn’t true.</li>
+<li>Across several days of measured stages, Phil’s live verdict moved from “not bad” to “4i again was really good,” with barge-in described as “natural and seamless.”</li>
+</ul>
+<p>Voice work on Tiggy went through a distinct earlier phase, referred to in the project as Mark 3, that tried to give a full-duplex speech model exact, live, grounded knowledge of a running assistant — the model’s own internal state, not just its transcript. After eight measured stages of increasingly targeted fixes, the team concluded the remaining gap was a property of how the underlying speech model had been trained, not something that could be wired or prompted around. That work was preserved as a record of what was tried and stopped, and a new, more deliberately product-shaped effort began: <strong>Mark 4</strong>.</p>
+<figure class="article-figure"><img src="/previews/pr-14/assets/diagrams/mark4-response-pacing.svg" alt="A decision flow showing spoken output only ever coming from a stable answer, a neutral audio cue, or a real observed milestone, cancelled instantly by real speech" loading="lazy" decoding="async"><figcaption>Mark 4&#39;s core product decision was pacing honesty: never speak progress that has not actually happened.</figcaption></figure>
+<h2>Question</h2>
+<p>Given a voice transport that already worked — the WebRTC/echo-cancellation/recognition/synthesis pipeline proven in <a href="/notes/mark-2-modular-voice-gateway/">Mark 2</a> — what would it actually take to make talking to an OpenClaw agent feel like a product rather than a demo? Concretely: could the assistant avoid awkward silence, avoid interrupting itself, avoid announcing progress it hadn’t made, and recover cleanly when the person listening started talking again mid-reply?</p>
+<h2>Setup</h2>
+<p>Mark 4 explicitly reused the Mark 2 transport rather than rebuilding it: browser WebRTC capture and echo cancellation, local voice-activity detection, a local speech-recognition model and a local speech-synthesis model, all on the same Mac mini. It ran as an isolated service on its own ports and its own LaunchAgent so that Mark 2 — kept running throughout as the fallback and comparison baseline — was never at risk. A single agent, Tiggy, was the default backend for this stage; Mark 2’s ability to switch between agents by voice was deliberately kept as a documented, not-yet-reactivated capability rather than pulled in immediately.</p>
+<p>The team explored, and then set aside, a lighter-weight “voice-front” agent designed to answer instantly from local context and delegate anything unfamiliar. A structured benchmark comparing that split design against sending everything to the full authoritative agent found the full-agent route gave a correct or useful answer for a much larger share of real turns, and that a private parallel-speculation variant of the lighter design produced no completed useful text at all in the fast lane across eighteen realistic test turns. The full, single-brain approach was kept.</p>
+<h2>What we tried</h2>
+<p><strong>Turn integrity first.</strong> Early live testing exposed a basic but important bug class: a person pausing mid-sentence could be treated as two separate turns, or a same-turn correction could arrive after the assistant had already started answering the earlier, wrong version. Mark 4 added an explicit turn-completion and turn-cancellation contract: a paused, resumed sentence produces exactly one user turn and one agent reply; a same-turn revision cleanly cancels the predecessor reply before it is spoken.</p>
+<p><strong>An honest thinking cue, not a fake one.</strong> The team’s first instinct for hiding response latency was some kind of filler (“let me check that…”). The actual design was narrower and more defensible: speak real, useful text the moment it is available; if there is genuinely no answer yet after roughly a second, play a quiet, brief audio cue rather than words, and only repeat it after another substantial silence if work is still pending; only speak a words-based progress update after several more seconds and an observed, real milestone in the underlying work — never a generic “still working” with nothing behind it; and cancel any pending cue instantly the moment either a real answer or the person’s own speech arrives. This was deliberately conservative: it would rather say less than say something untrue about its own progress.</p>
+<p><strong>Concrete pre-tool commentary, measured, then partly rolled back, then fixed properly.</strong> Wiring the assistant’s own brief, factual description of what it was about to do (not a canned phrase) into the speech queue produced a large measured improvement: across ten real tool-using turns, the time from a decision being made to useful audio being heard dropped from roughly 2.6 seconds down to roughly 0.3 seconds at the median. That change was initially rolled back after an old test fixture appeared to fail, then correctly re-deployed once the failure was isolated to the fixture rather than the new commentary logic. Chasing that regression also surfaced a separate, more serious bug: the streaming text used to detect a stable sentence could momentarily publish a truncated identifier or number — a partial value that looked plausible but was wrong — before the real, complete one arrived. The fix made a hard rule: any value the assistant is not allowed to get wrong is only ever published from a finished, authoritative response, never from an in-progress streaming snapshot.</p>
+<p><strong>Making the reply feel controllable, not just fast.</strong> A later small iteration exposed an adjustable speech rate (roughly 0.85x to 1.15x) directly in the interface, added Home Screen installability so the voice interface behaved like an ordinary iPhone app icon rather than a bookmark, and smoothed a genuinely measured but cosmetically distracting few tens of milliseconds of visual flicker between “speaking” and “thinking” states without touching the actual audio timing.</p>
+<p><strong>Bringing it off the home network.</strong> Once the interaction itself was accepted, a further stage added authenticated remote access over the public internet through an existing reverse proxy and a locked-down TURN relay server, so the same voice interface could be used away from the home LAN. This was verified with real mobile-data connection tests before being treated as complete.</p>
+<h2>Result</h2>
+<p>Each stage carried its own automated regression suite alongside the always-protected Mark 2 suite, and every stage report recorded both green. The most meaningful evidence, though, was a sequence of unscripted live conversations. An early stage drew the flat verdict “not bad.” A later stage, after the turn-integrity and thinking-cue work, drew: <strong>“has passed the inflection point of being legitimately useful and enjoyable to use.”</strong> After the pacing and speed-control refinement, a nearly five-minute natural phone conversation plus two Home Screen relaunch checks produced the verdict <strong>“4i again was really good,”</strong> with a live spoken interruption stopping the assistant’s own audio in well under a second, described as <strong>“natural and seamless”</strong> and <strong>“brilliant.”</strong></p>
+<p>Objective latency work continued in parallel throughout: the largest measured single-turn win came not from a clever architecture change but from an accepted product decision to keep one full agent warm with fast inference enabled, plus targeted improvements to how quickly a decision translated into audible commentary — the 2.6-to-0.3-second improvement above was the clearest example of an engineering fix producing a directly felt experience change.</p>
+<h2>What we would do next</h2>
+<p>The strongest deferred item is the reintroduction of <a href="/notes/mark-2-modular-voice-gateway/">Mark 2’s</a> agent-switching Operator commands into the Mark 4 product line, so the same polished voice experience is available for more than one backend agent. A second is widening the tested speech-rate range only with further naturalness and interruption evidence, since the team was deliberately conservative about raising it without proof. A third is investigating why iOS repeatedly re-prompts for microphone permission even behind a stable HTTPS origin — a platform behaviour that a certificate alone does not appear to fully solve.</p>
+</div>
+
+  
+    <aside class="connections resources">
+      <h2>References and resources</h2>
+      <ul>
+        
+          <li>
+            <a href="https://github.com/ml-explore/mlx">MLX</a>
+            <strong> · Source repository</strong>
+            <br><span>The Apple Silicon array framework behind the local speech-recognition and speech-synthesis models used throughout Mark 4.</span>
+          </li>
+        
+          <li>
+            <a href="https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps">Progressive Web Apps — Add to Home Screen</a>
+            <strong> · Documentation</strong>
+            <br><span>The manifest/service-worker pattern used to give the voice interface an iPhone Home Screen icon.</span>
+          </li>
+        
+      </ul>
+    </aside>
+  
+
+  
+  
+    <aside class="connections">
+      <h2>Related notes</h2>
+      <ul>
+        <li><a href="/previews/pr-14/notes/mark-2-modular-voice-gateway/">Mark 2 — a modular voice gateway that switches ears and mouth between agents</a></li><li><a href="/previews/pr-14/notes/system-versus-model-native-duplex/">System duplex versus model-native duplex for an AI voice assistant</a></li><li><a href="/previews/pr-14/notes/live-voice-tiggy-iphone/">Building an iPhone voice interface for an OpenClaw agent</a></li><li><a href="/previews/pr-14/notes/notebook-workflow/">Building an approval-gated lab notebook with GitHub Actions</a></li>
+      </ul>
+    </aside>
+  
+
+  
+  
+    <aside class="connections">
+      <h2>Pages linking here</h2>
+      <ul>
+        <li><a href="/previews/pr-14/notes/mark-2-modular-voice-gateway/">Mark 2 — a modular voice gateway that switches ears and mouth between agents</a></li>
+      </ul>
+    </aside>
+  
+</article>
+</main>
+    <footer>Built from Markdown. No trackers, adverts or algorithmic nonsense.</footer>
+  </body>
+</html>

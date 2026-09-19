@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Local SunSynk telemetry without the cloud · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <link rel="stylesheet" href="/previews/pr-14/assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/previews/pr-14/">Phil &amp; Tiggy&#39;s Lab Notes</a>
+      <nav aria-label="Main navigation">
+        <a href="/previews/pr-14/topics/">Topics</a>
+        <a href="/previews/pr-14/search/">Search</a>
+        <a href="/previews/pr-14/about/">About</a>
+      </nav>
+    </header>
+    <main data-pagefind-body><article class="note">
+  <h1>Local SunSynk telemetry without the cloud</h1>
+  
+  <p class="eyebrow project-period">Project period · <time datetime="2026-08-30T00:00:00.000Z">August–September 2026</time></p>
+  <p class="standfirst">A Raspberry Pi turned the inverter&#39;s RS-485 port into a local Modbus TCP feed for Home Assistant.</p>
+  
+    <ul class="topic-chips" aria-label="Topics">
+      <li><a href="/previews/pr-14/topics/home-assistant/">Home Assistant</a></li><li><a href="/previews/pr-14/topics/energy/">Energy</a></li><li><a href="/previews/pr-14/topics/modbus/">Modbus</a></li><li><a href="/previews/pr-14/topics/raspberry-pi/">Raspberry Pi</a></li>
+    </ul>
+  
+  <div class="prose"><h2>In brief</h2>
+<ul>
+<li>The inverter’s cloud integration was useful but not an ideal source for live local control and diagnosis.</li>
+<li>A small Raspberry Pi connected to the RS-485 port through a USB adapter.</li>
+<li>A CRC-valid register response proved wiring, speed and unit ID before any service was installed.</li>
+<li><code>mbusd</code> exposed the serial bus as Modbus TCP; a Home Assistant add-on read 72 configured sensors.</li>
+<li>The dashboard kept cloud and local entities visibly separate for comparison.</li>
+</ul>
+<p>The starting point was a <strong>SunSynk 3.6 kW single-phase low-voltage hybrid inverter</strong> with cloud telemetry already visible in the vendor app. We wanted a second, local path whose latency, availability and evidence did not depend on that cloud. A <strong>Raspberry Pi 3 Model B Rev 1.2</strong> running Debian 13 became the gateway: a CH340 USB-to-RS-485 adapter reached the inverter, <code>mbusd</code> exposed Modbus TCP, and Home Assistant consumed the readings.</p>
+<figure class="article-figure hardware-photo"><img src="/previews/pr-14/assets/images/hardware-sunsynk-3-6kw-hybrid.webp" alt="A white wall-mounted SunSynk 3.6 kW hybrid inverter with a small display and cable glands along its lower edge" loading="lazy" decoding="async"><figcaption>Representative official product image for SunSynk&#39;s 3.6 kW single-phase hybrid inverter class; the exact marketed SKU of the installed unit was not independently proved. <span class="figure-credit">Photo: <a href="https://www.sunsynk.org/products/single-phase-hybrid-inverters">SunSynk product image</a></span></figcaption></figure>
+<figure class="article-figure hardware-photo"><img src="/previews/pr-14/assets/images/hardware-raspberry-pi-3-model-b.webp" alt="A bare Raspberry Pi 3 Model B single-board computer showing its USB, Ethernet, HDMI and GPIO connections" loading="lazy" decoding="async"><figcaption>The local gateway is a Raspberry Pi 3 Model B Rev 1.2. <span class="figure-credit">Photo: <a href="https://commons.wikimedia.org/wiki/File:Raspberry_Pi_3_Model_B.jpg">JvA43 · CC0</a></span></figcaption></figure>
+<figure class="article-figure"><img src="/previews/pr-14/assets/diagrams/local-sunsynk.svg" alt="An inverter connects by RS-485 to a Raspberry Pi running mbusd, then by Modbus TCP to a Home Assistant add-on and MQTT entities" loading="lazy" decoding="async"><figcaption>Each stage was proved independently before the dashboard used the data.</figcaption></figure>
+<h2>Prove the wire first</h2>
+<p>The USB RS-485 adapter appeared as a CH340 serial device with a stable by-id path. Passive listens at several common baud rates captured nothing, which did not prove the A/B pair was reversed: Modbus RTU devices often remain silent until addressed.</p>
+<p>A read-only request at <strong>9600 8N1</strong>, unit <strong>1</strong>, asked for holding register zero. The inverter returned a framed value with a valid CRC. That single response established polarity, serial settings and address more convincingly than watching an idle line.</p>
+<h2>Add a narrow gateway</h2>
+<p>We built <code>mbusd</code> on the Pi and installed it as a supervised service. It opened the stable serial path and accepted Modbus TCP requests, with retries and conservative RTU spacing. An end-to-end test from another machine repeated the register read over TCP and returned the same value.</p>
+<p>Home Assistant’s Sunsynk add-on then pointed at the Pi gateway. Logs identified a single-phase hybrid inverter, the expected 3.6 kW rating and <strong>72 configured sensors</strong>. The add-on published local MQTT entities while the existing cloud integration remained intact.</p>
+<p>That duplication was deliberate. The dashboard labelled cloud and local sections separately and added read-across charts. Similar names from two sources are dangerous if operators cannot tell which path supplied a value.</p>
+<h2>Result</h2>
+<p>The Raspberry Pi became a small protocol boundary: USB and Modbus RTU on one side, ordinary local TCP on the other. Home Assistant no longer needed physical proximity to the inverter, and other read-only tools could test the gateway without opening the serial device directly.</p>
+<p>The build order was the main lesson: verify one CRC-good RTU response, verify the TCP bridge, then integrate the application. Layered proof turns “no data” from a wiring mystery into a bounded fault.</p>
+</div>
+
+  
+    <aside class="connections resources">
+      <h2>References and resources</h2>
+      <ul>
+        
+          <li>
+            <a href="https://github.com/3cky/mbusd">mbusd</a>
+            <strong> · Source repository</strong>
+            <br><span>The Modbus TCP-to-RTU gateway built on the Raspberry Pi.</span>
+          </li>
+        
+          <li>
+            <a href="https://github.com/kellerza/sunsynk">Sunsynk add-on</a>
+            <strong> · Source repository</strong>
+            <br><span>Home Assistant integration path used to read and publish the inverter data.</span>
+          </li>
+        
+      </ul>
+    </aside>
+  
+
+  
+  
+    <aside class="connections">
+      <h2>Related notes</h2>
+      <ul>
+        <li><a href="/previews/pr-14/notes/health-check-broke-zigbee/">The health check that briefly broke Zigbee</a></li><li><a href="/previews/pr-14/notes/moving-zha-remote-coordinator/">Moving ZHA to a remote coordinator</a></li><li><a href="/previews/pr-14/notes/rescuing-old-sonoff-basics/">Rescuing old Sonoff Basics with Tasmota and ESPHome</a></li><li><a href="/previews/pr-14/notes/tvheadend-tuner-debugging/">TVHeadend tuner debugging</a></li>
+      </ul>
+    </aside>
+  
+
+  
+  
+</article>
+</main>
+    <footer>Built from Markdown. No trackers, adverts or algorithmic nonsense.</footer>
+  </body>
+</html>
