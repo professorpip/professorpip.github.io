@@ -29,19 +29,27 @@
 <li><strong>Experiment</strong> — needs a fresh test, comparison or final project phase first.</li>
 </ul>
 <p>These are editorial readiness labels, not project-success scores. Failed experiments can be excellent <strong>Ready</strong> articles.</p>
-<p><em>Refreshed 19 September 2026. The prior “suggested opening run” (GCSE benchmark, VRAM shootout, VRAM-fit, tiered brain, Hermes-on-VM, agent-do-real-work, constrained delegation, live voice iPhone, ZHA move, Sonoff rescue, Sunsynk telemetry, notebook workflow) is now fully published under <code>content/notes/</code>; those 12 items and several duplicates elsewhere in this backlog have been removed. See git history for the prior version if the earlier framing is needed.</em></p>
+<p><em>Refreshed 19 September 2026 against the 20 live notes. Published subjects are recorded below and removed from the candidate inventory; git history retains the earlier framing.</em></p>
+<h2>Published reconciliation</h2>
+<p>All 20 live notes are accounted for and no longer appear as candidates:</p>
+<ul>
+<li><strong>Local AI:</strong> GCSE benchmark; 16 GB VRAM model shootout; why VRAM fit beat parameter count; tiered OpenClaw model architecture; local-agent harness comparison.</li>
+<li><strong>Agents and voice:</strong> OpenClaw agent introduction; iPhone voice interface; Moshika suitability; system versus model-native duplex; Hermes VM; constrained Hermes delegation; local-model failover and orphan-process cleanup.</li>
+<li><strong>Home systems:</strong> remote ZHA coordinator; Zigbee health-check failure; Sonoff Tasmota-to-ESPHome rescue; local SunSynk telemetry; direct RTSP versus transcoding; TVHeadend tuner debugging.</li>
+<li><strong>Notebook and network:</strong> approval-gated GitHub Actions notebook; living LAN inventory.</li>
+</ul>
 <h2>Suggested opening run</h2>
 <ol>
 <li><strong>Ready — Mark 2: a modular voice gateway that switches ears and mouth between agents.</strong> WebRTC/AEC/VAD/Nemotron/Kokoro shared front end, <code>Operator</code> voice commands to move the same audio path between Tiggy and Midge, and automated audio proofs of switching both ways.</li>
 <li><strong>Ready — Mark 4: pivoting live voice from a research rig to a usable product.</strong> Why the team stopped chasing Moshi-native duplex, built on the proven Mark 2 transport, and iteratively fixed turn-splitting, empty-reply and pacing bugs until Phil’s verdict moved from “not bad” to “really good”.</li>
-<li><strong>Reconstruct — Mark 3: an eight-stage chase for exact, live semantic grounding in a duplex voice model.</strong> ARC bridge validation, transactional checkpoint/restore, entity-anchored sampling and DSM/TTS scheduling each solved part of the problem and each still left the authoritative fact unreliable in the actual audio.</li>
-<li><strong>Reconstruct — The stock Moshika full-duplex proof, without any agent in the loop.</strong> A near-native-feeling 200-second WebRTC call that isolates how much of “natural voice” comes from the base model versus everything built around it.</li>
 <li><strong>Ready — The Midge real-work benchmark: GPT, Claude, Qwen Next, Dirk and Bartowski on 18 frozen tasks.</strong> A scored, auditable comparison that explains why the “best” model on paper is not always the best actual agent configuration.</li>
-<li><strong>Ready — Why “risky task, maximum reasoning” was the wrong policy for local Qwen models.</strong> A quantified no-go result: forced high reasoning burned the token budget and produced worse pass rates than reasoning off.</li>
-<li><strong>Ready — A quota-aware policy for routing bounded work to a second model.</strong> How a simple linear glide-path target turned “don’t waste quota” into an actual routing decision with clear thresholds.</li>
 <li><strong>Ready — Windows versus Ubuntu for llama.cpp on the same machine.</strong> What changed and what did not.</li>
-<li><strong>Ready — Migrating Tiggy from a VM to a Mac mini without losing continuity.</strong> Identity, memory and operational cutover.</li>
-<li><strong>Ready — A repeatable local-agent evaluation harness.</strong> Smoke tests, core tasks, GCSE tasks and honest failure classification.</li>
+<li><strong>Ready — Migrating an OpenClaw agent from a VM to a Mac mini without losing continuity.</strong> Identity, memory and operational cutover, using Tiggy as the worked example.</li>
+<li><strong>Ready — The OpenClaw update that silently lost LAN access.</strong> Duplicate macOS Local Network permissions and misleading symptoms.</li>
+<li><strong>Ready — Building a low-cost Frigate camera estate with Thingino.</strong> The architecture, firmware choice and repeatable onboarding pattern behind a mixed-camera system.</li>
+<li><strong>Ready — Cloud versus local inverter telemetry.</strong> Latency, availability and side-by-side validation using a SunSynk hybrid inverter.</li>
+<li><strong>Ready — Layered physical recovery with a button pusher and JetKVM.</strong> Combining a simple servo with remote KVM access without exposing live recovery details.</li>
+<li><strong>Ready — Rendered pull-request previews on GitHub Free.</strong> Private source, public-unlisted previews, approval-gated publishing and automatic cleanup.</li>
 </ol>
 <h2>Local AI and evaluation</h2>
 <ul>
@@ -63,6 +71,7 @@
 <p><strong>Reading path:</strong> benchmark design → model shootout → VRAM fit → MTP/KV tuning → tiered brain → agent harness comparison → Midge model bake-off → reasoning-policy result.</p>
 <h2>Agents, automation and resilience</h2>
 <ul>
+<li><strong>Ready — Migrating an OpenClaw agent from a VM to a Mac mini without losing continuity.</strong> Identity, memory and operational cutover, using Tiggy as the worked example.</li>
 <li><strong>Ready — Running a personal assistant as a non-admin macOS user.</strong> Least privilege without making it useless.</li>
 <li><strong>Ready — Watchdogs and reapers.</strong> Why process health is not the same as user-visible recovery.</li>
 <li><strong>Ready — The OpenClaw update that silently lost LAN access.</strong> Duplicate macOS Local Network permissions and misleading symptoms.</li>
@@ -128,7 +137,7 @@
 <ul>
 <li><strong>Ready — Three OpenWRT access points behind OPNsense.</strong> A practical home network map.</li>
 <li><strong>Ready — Monitoring a Liebert UPS on Unraid.</strong> NUT, partial metrics and shutdown choices.</li>
-<li><strong>Ready — The laptop button pusher and JetKVM.</strong> Layered physical and remote recovery, with sensitive details removed.</li>
+<li><strong>Ready — Layered physical recovery with a button pusher and JetKVM.</strong> Combining a simple servo with remote KVM access without exposing live recovery details.</li>
 <li><strong>Ready — A read-only NAS indexing VM with virtiofs.</strong> Safe visibility into a large Unraid filesystem.</li>
 <li><strong>Experiment — An RP2350 USB HID KVM.</strong> A lower-cost control path awaiting its next hardware phase.</li>
 <li><strong>Reconstruct — Diagnosing an isolated gaming-PC network.</strong> Useful OPNsense reasoning, only if the family context can be fully anonymised.</li>
