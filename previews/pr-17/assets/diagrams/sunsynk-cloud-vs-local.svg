@@ -1,10 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 440" role="img" aria-labelledby="t d"><title id="t">Cloud versus local SunSynk inverter telemetry</title><desc id="d">A cloud-only battery SOC reading was implausible; a local RS-485/Modbus path gave direct, trustworthy pack-level data instead.</desc><rect width="960" height="440" rx="28" fill="#f7f3ea"/><g font-family="system-ui,sans-serif" text-anchor="middle">
-<text x="480" y="48" font-size="25" font-weight="700" fill="#17233d">Two paths to the same inverter</text>
-<rect x="90" y="90" width="330" height="90" rx="16" fill="#8a3b53"/><text x="255" y="128" font-size="18" font-weight="700" fill="white">SunSynk cloud (SunSynk.net)</text><text x="255" y="155" font-size="13" fill="white">implausible 90% SOC, no cross-check</text>
-<rect x="540" y="90" width="330" height="90" rx="16" fill="#3f7d5c"/><text x="705" y="128" font-size="18" font-weight="700" fill="white">Local RS-485 → Modbus TCP</text><text x="705" y="155" font-size="13" fill="white">Solar Pi → mbusd → Home Assistant</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 440" role="img" aria-labelledby="t d"><title id="t">Cross-checking a misleading SunSynk SOC reading</title><desc id="d">Cloud history, a local RS-485/Modbus path and pack-level BMS telemetry together showed reported battery SOC itself was unreliable, not just one data path.</desc><rect width="960" height="440" rx="28" fill="#f7f3ea"/><g font-family="system-ui,sans-serif" text-anchor="middle">
+<text x="480" y="48" font-size="25" font-weight="700" fill="#17233d">Three evidence sources, one misleading number</text>
+<rect x="90" y="90" width="330" height="90" rx="16" fill="#8a3b53"/><text x="255" y="128" font-size="18" font-weight="700" fill="white">SunSynk cloud history</text><text x="255" y="155" font-size="13" fill="white">implausible 90% SOC, dateable transition</text>
+<rect x="540" y="90" width="330" height="90" rx="16" fill="#3f7d5c"/><text x="705" y="128" font-size="18" font-weight="700" fill="white">Local RS-485 → Modbus TCP</text><text x="705" y="155" font-size="13" fill="white">Raspberry Pi → mbusd → Home Assistant</text>
 <path d="M255 180v50h450v40" stroke="#64748b" stroke-width="4" fill="none"/>
 <path d="M705 180v90" stroke="#64748b" stroke-width="4" fill="none"/>
-<rect x="330" y="280" width="300" height="70" rx="16" fill="#17233d"/><text x="480" y="312" font-size="18" font-weight="700" fill="white">Same inverter, read two ways</text><text x="480" y="335" font-size="13" fill="white">cloud vs local shown side by side on one dashboard</text>
+<rect x="330" y="280" width="300" height="70" rx="16" fill="#17233d"/><text x="480" y="312" font-size="18" font-weight="700" fill="white">Same frozen SOC on every path</text><text x="480" y="335" font-size="13" fill="white">plus pack-level BMS voltage/current/cell-delta evidence</text>
 <path d="M480 350v40" stroke="#64748b" stroke-width="4" fill="none"/>
 <text x="480" y="412" font-size="17" font-weight="700" fill="#17233d">Result: pack voltage/current/cell-delta trusted over reported SOC</text>
 </g></svg>
