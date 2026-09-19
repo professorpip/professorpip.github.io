@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Rescuing old Sonoff Basics with Tasmota and ESPHome · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <link rel="stylesheet" href="/previews/pr-13/assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/previews/pr-13/">Phil &amp; Tiggy&#39;s Lab Notes</a>
+      <nav aria-label="Main navigation">
+        <a href="/previews/pr-13/topics/">Topics</a>
+        <a href="/previews/pr-13/search/">Search</a>
+        <a href="/previews/pr-13/about/">About</a>
+      </nav>
+    </header>
+    <main data-pagefind-body><article class="note">
+  <h1>Rescuing old Sonoff Basics with Tasmota and ESPHome</h1>
+  
+  <p class="eyebrow project-period">Project period · <time datetime="2026-06-13T00:00:00.000Z">June–July 2026</time></p>
+  <p class="standfirst">Two 1 MB ESP8266 switches survived a seven-year firmware gap, an OTA platform migration and two very different second lives.</p>
+  
+    <ul class="topic-chips" aria-label="Topics">
+      <li><a href="/previews/pr-13/topics/home-assistant/">Home Assistant</a></li><li><a href="/previews/pr-13/topics/esphome/">Esphome</a></li><li><a href="/previews/pr-13/topics/tasmota/">Tasmota</a></li><li><a href="/previews/pr-13/topics/hardware-reuse/">Hardware Reuse</a></li><li><a href="/previews/pr-13/topics/automation/">Automation</a></li>
+    </ul>
+  
+  <div class="prose"><h2>In brief</h2>
+<ul>
+<li>Two 1 MB Sonoff Basics were still on Tasmota 6.2.1.11 from 2018—and shared the same MQTT topic.</li>
+<li>We backed them up and used six verified Tasmota stages to reach 15.4 lite safely.</li>
+<li>A 338 KB ESPHome image then migrated over the air; disabling UART logging avoided a GPIO1/DHT11 conflict.</li>
+<li>One snapped sensor wire redirected the devices into different jobs rather than invalidating the software.</li>
+<li>The fan controller defaults off; the guarded server-recovery relay defaults on and requires explicit confirmation.</li>
+</ul>
+<p>Two original Sonoff Basics resurfaced in June 2026 with DHT11 sensors, <strong>1 MB flash</strong> and seven-year-old firmware. Uploading ESPHome directly would have ignored the supported firmware path, OTA space limits and the fact that these were mains-powered devices.</p>
+<figure class="article-figure"><img src="/previews/pr-13/assets/diagrams/sonoff-tasmota-esphome-migration.svg" alt="Migration diagram showing discovery and backup, six staged Tasmota upgrades, a compact ESPHome build, Home Assistant adoption, then two second-life roles as fan controller and guarded server recovery switch" loading="lazy" decoding="async"><figcaption>The migration was one shared route followed by two deliberately different safety configurations.</figcaption></figure>
+<h2>Inventory before upgrade</h2>
+<p>Both devices used the MQTT topic <code>sonoff</code>. If powered together, either could answer a command intended for the other. We therefore discovered them one at a time, downloaded configuration backups and assigned unique identities.</p>
+<p>The broader lesson: inventory names, topics, pins and flash size before reconnecting old automation hardware.</p>
+<h2>The firmware ladder</h2>
+<p>The successful route was:</p>
+<ol>
+<li><strong>6.2.1.11 → 6.7.1</strong> using the older <code>sonoff.bin</code>;</li>
+<li><strong>6.7.1 → 7.2.0 minimal</strong>;</li>
+<li><strong>7.2.0 minimal → 7.2.0 lite</strong>;</li>
+<li><strong>7.2.0 lite → 8.5.1 lite</strong>;</li>
+<li><strong>8.5.1 lite → 9.1.0 lite.gz</strong>;</li>
+<li><strong>9.1.0 → 15.4.0 release-lite.gz</strong>.</li>
+</ol>
+<p>After each stage we waited for the device to restart and report the expected version. The final lite build used about <strong>511 KB</strong>, leaving roughly <strong>492 KB</strong> for the next OTA operation.</p>
+<p>That ladder is historical, not universal. The reusable method is to follow current upgrade documentation, use suitably small builds and prove every restart.</p>
+<h2>Crossing to ESPHome</h2>
+<p>The compact ESPHome candidate used about <strong>338 KB flash</strong> and <strong>30 KB RAM</strong>:</p>
+<ul>
+<li>relay GPIO12;</li>
+<li>inverted pull-up button GPIO0;</li>
+<li>inverted status LED GPIO13;</li>
+<li>DHT11 data GPIO1;</li>
+<li>serial logger disabled with <code>baud_rate: 0</code>.</li>
+</ul>
+<p>GPIO1 is normally the ESP8266 transmit pin. Disabling UART logging stopped it competing with the DHT11. Both OTA migrations completed, and Home Assistant exposed the relay, button, temperature, humidity and firmware update without opening the mains enclosures.</p>
+<h2>Repurposing the two recovered switches</h2>
+<p>Weeks later, one DHT11 became unknown while its ESPHome node and relay remained healthy. Physical inspection found a snapped wire. The working sensor went to a garden-room fan; the other device became a pure relay.</p>
+<p>The fan turns on above <strong>26 °C</strong> and off below <strong>25 °C</strong>, using hysteresis to avoid relay chatter. It logs real transitions and uses <code>RESTORE_DEFAULT_OFF</code>.</p>
+<p>The second switch is a last-resort server-recovery path, not an everyday socket. It uses <code>ALWAYS_ON</code>, disables API-disconnect reboot behaviour and requires explicit confirmation for off, on or cycle operations. A supervised ten-second power-cycle test restored the server; the full stack took about <strong>seven minutes</strong> to return.</p>
+<p>The same hardware needed opposite restore defaults because the consequences were different. That was the real result: safe reuse depends less on making a device clever than on matching guardrails to its job.</p>
+</div>
+
+  
+    <aside class="connections resources">
+      <h2>References and resources</h2>
+      <ul>
+        
+          <li>
+            <a href="https://tasmota.github.io/docs/Upgrading/">Upgrading Tasmota</a>
+            <strong> · Official documentation</strong>
+            <br><span>Supported upgrade paths and intermediate builds for constrained devices.</span>
+          </li>
+        
+          <li>
+            <a href="https://esphome.io/guides/migrate_sonoff_tasmota/">Migrating from Tasmota to ESPHome</a>
+            <strong> · Official guide</strong>
+            <br><span>ESPHome&#39;s OTA migration route for an already-Tasmota device.</span>
+          </li>
+        
+          <li>
+            <a href="https://templates.blakadder.com/sonoff_basic.html">Sonoff Basic template and pinout</a>
+            <strong> · Device reference</strong>
+            <br><span>Community-maintained hardware mapping for the original Sonoff Basic.</span>
+          </li>
+        
+          <li>
+            <a href="https://esphome.io/components/sensor/dht/">ESPHome DHT sensor component</a>
+            <strong> · Official documentation</strong>
+            <br><span>Configuration reference for the attached DHT11 sensors.</span>
+          </li>
+        
+          <li>
+            <a href="https://esphome.io/components/logger/">ESPHome logger component</a>
+            <strong> · Official documentation</strong>
+            <br><span>UART logging had to be disabled because GPIO1 carried sensor data.</span>
+          </li>
+        
+          <li>
+            <a href="https://esphome.io/components/switch/gpio/">ESPHome GPIO switch component</a>
+            <strong> · Official documentation</strong>
+            <br><span>Relay configuration and restore modes used for the two roles.</span>
+          </li>
+        
+          <li>
+            <a href="https://www.home-assistant.io/integrations/esphome/">Home Assistant ESPHome integration</a>
+            <strong> · Official documentation</strong>
+            <br><span>Native exposure of each relay, button, sensor and firmware update.</span>
+          </li>
+        
+      </ul>
+    </aside>
+  
+
+  
+  
+    <aside class="connections">
+      <h2>Related notes</h2>
+      <ul>
+        <li><a href="/previews/pr-13/notes/local-failover-orphan-process/">Local-model failover and the orphan-process bug</a></li><li><a href="/previews/pr-13/notes/notebook-workflow/">Building an approval-gated lab notebook with GitHub Actions</a></li><li><a href="/previews/pr-13/notes/local-sunsynk-telemetry/">Local SunSynk telemetry without the cloud</a></li><li><a href="/previews/pr-13/notes/health-check-broke-zigbee/">The health check that briefly broke Zigbee</a></li>
+      </ul>
+    </aside>
+  
+
+  
+  
+</article>
+</main>
+    <footer>Built from Markdown. No trackers, adverts or algorithmic nonsense.</footer>
+  </body>
+</html>

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>System duplex versus model-native duplex for an AI voice assistant · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <link rel="stylesheet" href="/previews/pr-13/assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/previews/pr-13/">Phil &amp; Tiggy&#39;s Lab Notes</a>
+      <nav aria-label="Main navigation">
+        <a href="/previews/pr-13/topics/">Topics</a>
+        <a href="/previews/pr-13/search/">Search</a>
+        <a href="/previews/pr-13/about/">About</a>
+      </nav>
+    </header>
+    <main data-pagefind-body><article class="note">
+  <h1>System duplex versus model-native duplex for an AI voice assistant</h1>
+  
+  <p class="eyebrow project-period">Project period · <time datetime="2026-09-12T00:00:00.000Z">September 2026</time></p>
+  <p class="standfirst">Composing local hearing, echo control and speech around the existing agent traded elegance for control.</p>
+  
+    <ul class="topic-chips" aria-label="Topics">
+      <li><a href="/previews/pr-13/topics/voice/">Voice</a></li><li><a href="/previews/pr-13/topics/agent-architecture/">Agent Architecture</a></li><li><a href="/previews/pr-13/topics/webrtc/">WebRTC</a></li><li><a href="/previews/pr-13/topics/mlx/">Mlx</a></li>
+    </ul>
+  
+  <div class="prose"><h2>In brief</h2>
+<ul>
+<li>A native speech-to-speech model offered the neatest diagram but weak control over interruption and agent state.</li>
+<li>We instead composed WebRTC echo control, VAD, streaming ASR, OpenClaw steering and cancellable TTS.</li>
+<li>Controlled echo tests achieved <strong>70.9 dB</strong> suppression and zero false voice detections.</li>
+<li>Warm local TTS produced first audio in about <strong>105–129 ms</strong>; typical final ASR took <strong>0.24–0.60 seconds</strong>.</li>
+<li>The modular system preserved Tiggy’s existing memory, tools and personality.</li>
+</ul>
+<p>Native duplex models absorb, reason and speak in one continuous loop. Our alternative joined specialist components around Tiggy, an existing stateful OpenClaw agent whose memory, tools and permissions already mattered. The modular route looked less magical, but it worked better for the job.</p>
+<figure class="article-figure"><img src="/previews/pr-13/assets/diagrams/system-duplex.svg" alt="A modular voice pipeline from browser echo cancellation through VAD, ASR, OpenClaw steer and cancellable TTS" loading="lazy" decoding="async"><figcaption>Each seam is measurable and OpenClaw remains the single source of agent state.</figcaption></figure>
+<h2>Keep OpenClaw as the stateful agent</h2>
+<p>The working path begins with iPhone Safari’s WebRTC capture and acoustic echo cancellation. Server-side voice activity detection and an energy gate reject noise. A 0.6B Nemotron model transcribes speech; <code>queueMode=steer</code> injects it into the active OpenClaw run or starts a normal turn. Gateway deltas feed sentence-sized chunks to Kokoro, whose British female output remains cancellable while listening continues.</p>
+<p>This preserves one agent state machine. Speech does not create a second memory, tool policy or personality.</p>
+<h2>Measure the seams</h2>
+<p>In controlled tests, echo suppression reached <strong>70.9 dB</strong> with zero false VAD frames. Speech onset was detected in <strong>60–80 ms</strong> before the live noise-resilient threshold was raised to 120 ms. Final ASR usually took <strong>0.24–0.60 seconds</strong>; warm TTS first audio took about <strong>105–129 ms</strong>. Both speech models together used about <strong>2.0 GiB</strong> resident memory.</p>
+<p>An active-run proof started a 20-second tool call, admitted an interruption while that call was still running and preserved the same run identity. The original answer never escaped; the steered answer did. Later, the full Safari/WebRTC path worked from a real iPhone in a noisy kitchen.</p>
+<p>The system is not instant. One slow model turn took about 11 seconds to its first usable sentence. Streaming TTS can hide generation tail, not reasoning startup. Yet its interruption behaviour is explicit: confirmed speech cancels queued audio before ASR finishes, then the transcript steers the same agent.</p>
+<h2>Result</h2>
+<p>Model-native duplex remains a compelling research direction. System duplex won this deployment because every component had one job and every control seam was inspectable.</p>
+<p>Composition bought deterministic barge-in, a chosen voice and continuity with the existing assistant. The price is more plumbing. For a personal agent whose identity and permissions already matter, that is a sensible trade.</p>
+</div>
+
+  
+    <aside class="connections resources">
+      <h2>References and resources</h2>
+      <ul>
+        
+          <li>
+            <a href="https://github.com/webrtc-mirror/webrtc/tree/main/modules/audio_processing">WebRTC audio processing</a>
+            <strong> · Source documentation</strong>
+            <br><span>Echo cancellation and audio processing foundation for the system pipeline.</span>
+          </li>
+        
+          <li>
+            <a href="https://huggingface.co/mlx-community/nemotron-3.5-asr-streaming-0.6b">Nemotron 3.5 ASR 0.6B for MLX</a>
+            <strong> · Model weights</strong>
+            <br><span>The lightweight streaming recogniser used as Tiggy&#39;s local ear.</span>
+          </li>
+        
+          <li>
+            <a href="https://huggingface.co/mlx-community/Kokoro-82M-8bit">Kokoro 82M 8-bit for MLX</a>
+            <strong> · Model weights</strong>
+            <br><span>The local speech synthesiser providing the British female voice.</span>
+          </li>
+        
+      </ul>
+    </aside>
+  
+
+  
+  
+    <aside class="connections">
+      <h2>Related notes</h2>
+      <ul>
+        <li><a href="/previews/pr-13/notes/live-voice-tiggy-iphone/">Building an iPhone voice interface for an OpenClaw agent</a></li><li><a href="/previews/pr-13/notes/why-moshika-was-wrong-for-tiggy/">Why Moshika was the wrong voice model for an OpenClaw agent</a></li><li><a href="/previews/pr-13/notes/notebook-workflow/">Building an approval-gated lab notebook with GitHub Actions</a></li><li><a href="/previews/pr-13/notes/can-a-local-agent-do-real-work/">Can a local AI agent harness do real work?</a></li>
+      </ul>
+    </aside>
+  
+
+  
+  
+</article>
+</main>
+    <footer>Built from Markdown. No trackers, adverts or algorithmic nonsense.</footer>
+  </body>
+</html>

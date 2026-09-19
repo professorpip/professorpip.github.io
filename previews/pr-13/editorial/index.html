@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A private working map of potential lab notes, visible only in rendered pull-request previews.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Editorial backlog · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <link rel="stylesheet" href="/previews/pr-13/assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/previews/pr-13/">Phil &amp; Tiggy&#39;s Lab Notes</a>
+      <nav aria-label="Main navigation">
+        <a href="/previews/pr-13/topics/">Topics</a>
+        <a href="/previews/pr-13/search/">Search</a>
+        <a href="/previews/pr-13/about/">About</a>
+      </nav>
+    </header>
+    <main data-pagefind-body><section class="hero compact">
+  <p class="eyebrow">Private working page · preview only</p>
+  <h1>Editorial backlog</h1>
+  <p>A map of projects that produced something useful, disproved an assumption, or left behind a repeatable method.</p>
+</section>
+<h2>Status key</h2>
+<ul>
+<li><strong>Ready</strong> — enough notes, code or measurements exist to draft this responsibly.</li>
+<li><strong>Reconstruct</strong> — worthwhile, but older artefacts or conversations need another pass.</li>
+<li><strong>Experiment</strong> — needs a fresh test, comparison or final project phase first.</li>
+</ul>
+<p>These are editorial readiness labels, not project-success scores. Failed experiments can be excellent <strong>Ready</strong> articles.</p>
+<p><em>Refreshed 19 September 2026. The prior “suggested opening run” (GCSE benchmark, VRAM shootout, VRAM-fit, tiered brain, Hermes-on-VM, agent-do-real-work, constrained delegation, live voice iPhone, ZHA move, Sonoff rescue, Sunsynk telemetry, notebook workflow) is now fully published under <code>content/notes/</code>; those 12 items and several duplicates elsewhere in this backlog have been removed. See git history for the prior version if the earlier framing is needed.</em></p>
+<h2>Suggested opening run</h2>
+<ol>
+<li><strong>Ready — Mark 2: a modular voice gateway that switches ears and mouth between agents.</strong> WebRTC/AEC/VAD/Nemotron/Kokoro shared front end, <code>Operator</code> voice commands to move the same audio path between Tiggy and Midge, and automated audio proofs of switching both ways.</li>
+<li><strong>Ready — Mark 4: pivoting live voice from a research rig to a usable product.</strong> Why the team stopped chasing Moshi-native duplex, built on the proven Mark 2 transport, and iteratively fixed turn-splitting, empty-reply and pacing bugs until Phil’s verdict moved from “not bad” to “really good”.</li>
+<li><strong>Reconstruct — Mark 3: an eight-stage chase for exact, live semantic grounding in a duplex voice model.</strong> ARC bridge validation, transactional checkpoint/restore, entity-anchored sampling and DSM/TTS scheduling each solved part of the problem and each still left the authoritative fact unreliable in the actual audio.</li>
+<li><strong>Reconstruct — The stock Moshika full-duplex proof, without any agent in the loop.</strong> A near-native-feeling 200-second WebRTC call that isolates how much of “natural voice” comes from the base model versus everything built around it.</li>
+<li><strong>Ready — The Midge real-work benchmark: GPT, Claude, Qwen Next, Dirk and Bartowski on 18 frozen tasks.</strong> A scored, auditable comparison that explains why the “best” model on paper is not always the best actual agent configuration.</li>
+<li><strong>Ready — Why “risky task, maximum reasoning” was the wrong policy for local Qwen models.</strong> A quantified no-go result: forced high reasoning burned the token budget and produced worse pass rates than reasoning off.</li>
+<li><strong>Ready — A quota-aware policy for routing bounded work to a second model.</strong> How a simple linear glide-path target turned “don’t waste quota” into an actual routing decision with clear thresholds.</li>
+<li><strong>Ready — Windows versus Ubuntu for llama.cpp on the same machine.</strong> What changed and what did not.</li>
+<li><strong>Ready — Migrating Tiggy from a VM to a Mac mini without losing continuity.</strong> Identity, memory and operational cutover.</li>
+<li><strong>Ready — A repeatable local-agent evaluation harness.</strong> Smoke tests, core tasks, GCSE tasks and honest failure classification.</li>
+</ol>
+<h2>Local AI and evaluation</h2>
+<ul>
+<li><strong>Ready — Windows versus Ubuntu for llama.cpp on the same machine.</strong> What changed and what did not.</li>
+<li><strong>Ready — MTP and quantised KV cache.</strong> Fitting useful speed and 32K context into 16 GB of VRAM.</li>
+<li><strong>Ready — The NVIDIA 595 → 610 → 595 experiment.</strong> Newer worked, but brought no useful win.</li>
+<li><strong>Ready — A modest DDR4 overclock with almost no LLM benefit.</strong> Why measurement matters.</li>
+<li><strong>Ready — Qwen Flash Next split across CPU and GPU.</strong> Technically viable, practically slow.</li>
+<li><strong>Ready — FreeToken and ExLlamaV3.</strong> Two negative results that saved further effort.</li>
+<li><strong>Ready — Mac mini MLX versus llama.cpp.</strong> Speed, memory and operational simplicity.</li>
+<li><strong>Experiment — Distributed MLX across two Macs.</strong> The LAN proof exists; Thunderbolt is the next chapter.</li>
+<li><strong>Ready — Orchestrating CPU, GPU, wake-on-LAN and SSH tunnels.</strong> How Tiggy treats hardware as an elastic local worker pool.</li>
+<li><strong>Ready — A repeatable local-agent evaluation harness.</strong> Smoke tests, core tasks, GCSE tasks and honest failure classification.</li>
+<li><strong>Ready — A tiny screenshot/UI benchmark for a text-first local model.</strong> What vision added and where it remained brittle.</li>
+<li><strong>Reconstruct — Choosing quantisation by task rather than leaderboard.</strong> IQ3, IQ4, Q2 and memory-quality trade-offs across tests.</li>
+<li><strong>Ready — The Midge real-work benchmark: GPT, Claude, Qwen Next, Dirk and Bartowski on 18 frozen tasks.</strong> Scored, auditable comparison of cloud-senior, cloud-backup and local-agent configurations, including a follow-up correcting hidden-proof scoring bugs.</li>
+<li><strong>Ready — Why “risky task, maximum reasoning” was the wrong policy for local Qwen models.</strong> Forced <code>xhigh</code> reasoning exhausted the completion budget with no final answer more often than reasoning off.</li>
+</ul>
+<p><strong>Reading path:</strong> benchmark design → model shootout → VRAM fit → MTP/KV tuning → tiered brain → agent harness comparison → Midge model bake-off → reasoning-policy result.</p>
+<h2>Agents, automation and resilience</h2>
+<ul>
+<li><strong>Ready — Running a personal assistant as a non-admin macOS user.</strong> Least privilege without making it useless.</li>
+<li><strong>Ready — Watchdogs and reapers.</strong> Why process health is not the same as user-visible recovery.</li>
+<li><strong>Ready — The OpenClaw update that silently lost LAN access.</strong> Duplicate macOS Local Network permissions and misleading symptoms.</li>
+<li><strong>Ready — Backing up an agent so it can genuinely be restored.</strong> Checksums, recovery notes and known-good snapshots.</li>
+<li><strong>Ready — Daily transcript archives as memory insurance.</strong> Turning ephemeral chats into searchable, compressed records.</li>
+<li><strong>Ready — Making Hermes faster by reducing prompts and tools.</strong> Less context, better boundaries and more predictable work.</li>
+<li><strong>Ready — A transcript-grounded YouTube research digest.</strong> Finding only new videos and verifying what they actually say.</li>
+<li><strong>Ready — Moving commute checks between agents without duplicate notifications.</strong> Migration, disabling and proof.</li>
+<li><strong>Ready — A constrained release-watch bridge.</strong> Letting one agent inspect another system without gaining a shell.</li>
+<li><strong>Ready — External-write verification.</strong> Why “the API accepted it” is not the same as “it exists”.</li>
+<li><strong>Ready — A quota-aware policy for routing bounded work to a second model.</strong> A linear weekly glide-path target that decides when a controlling model keeps work versus hands it to a bounded worker.</li>
+<li><strong>Reconstruct — A durable inter-agent task broker for the household.</strong> An HTTP + SQLite event/task store built to keep multi-agent delegation separate from the home-automation message bus; still a phase-one prototype.</li>
+<li><strong>Experiment — Giving an agent read access to NotebookLM for source packs.</strong> An MCP integration proved and scoped to safe, non-destructive tools; not yet used to produce a real explainer source pack.</li>
+<li><strong>Experiment — A paused feasibility spike for iPhone-mirroring screen control.</strong> Clarified the real ownership/authorisation boundary (whose account, whose device, whose explicit consent) before any tap or swipe; a good case study in stopping at a safety line rather than a working feature.</li>
+<li><strong>Reconstruct — The custom flight-price scraper.</strong> From browser scraping to backend-style retrieval and structured Sheets output.</li>
+<li><strong>Reconstruct — Building a trip-control workbook from messy source material.</strong> Useful prioritisation without publishing family details.</li>
+<li><strong>Reconstruct — Calendar automation that filters for human usefulness.</strong> Turning noisy institutional dates into meaningful reminders.</li>
+</ul>
+<p><strong>Reading path:</strong> Tiggy migration → least privilege → backup → failover-lesson-in-notes → watchdog lesson → cross-agent delegation → quota-aware routing → task broker → recurring jobs.</p>
+<h2>Voice and local media</h2>
+<ul>
+<li><strong>Ready — Mark 2: a modular voice gateway that switches ears and mouth between agents.</strong> The shared WebRTC/AEC/VAD/Nemotron/Kokoro transport, <code>Operator</code> switching commands, and the audio proofs that made it the accepted foundation for later work.</li>
+<li><strong>Reconstruct — Mark 3: an eight-stage chase for exact, live semantic grounding in a duplex voice model.</strong> Each stage (ARC remap, live bridge, transactional checkpoint/restore, entity anchoring, DSM/TTS scheduling) closed one gap and exposed the next; the final blocker is a training problem, not a wiring problem.</li>
+<li><strong>Reconstruct — The stock Moshika full-duplex proof, without any agent in the loop.</strong> Isolating how much of the “natural” feel is the base speech model versus everything layered around it.</li>
+<li><strong>Ready — Mark 4: pivoting live voice from a research rig to a usable product.</strong> Turn-integrity fixes, a genuine “thinking” cue, exact-value safety, and the measured latency chain from speech-end to audible reply.</li>
+<li><strong>Ready — Echo cancellation and false utterances in a real kitchen.</strong> What changed outside the lab.</li>
+<li><strong>Ready — Teaching speech recognition that “Tiggy” is a name.</strong> A small correction with disproportionate usability value.</li>
+<li><strong>Ready — Local image and video generation on a 16 GB GPU.</strong> The practical ComfyUI setup.</li>
+<li><strong>Ready — Jessica and Pip: The Secret Door.</strong> An honest stills-plus-motion media proof of concept, with family details minimised.</li>
+</ul>
+<p><strong>Reading path:</strong> duplex-model survey → Mark 2 modular gateway → Mark 3 semantic-grounding attempt → Mark 4 product pivot → kitchen tuning.</p>
+<h2>Home Assistant</h2>
+<ul>
+<li><strong>Ready — How the Home Assistant architecture evolved.</strong> HAOS, Unraid, local services and dependable control paths.</li>
+<li><strong>Ready — Designing an emergency server power switch safely.</strong> Restore modes, read-only status and explicit destructive confirmation.</li>
+<li><strong>Ready — Garden-room fan control with hysteresis.</strong> Avoiding relay chatter and logging only meaningful actions.</li>
+<li><strong>Ready — Cloud versus local inverter telemetry.</strong> Latency, availability and side-by-side validation.</li>
+<li><strong>Ready — Four rack batteries over BLE proxies.</strong> Making multiple BMSs observable in one place.</li>
+<li><strong>Ready — When battery SOC cannot be trusted.</strong> Using voltage, current, cell spread and controlled tests.</li>
+<li><strong>Ready — Battery monitoring that fails quietly on network noise and loudly on broken code.</strong> Alert design under imperfect connectivity.</li>
+<li><strong>Ready — A cloud/local energy read-across dashboard.</strong> Designing for diagnosis rather than decoration.</li>
+<li><strong>Ready — Garden irrigation: commanded state versus measured water flow.</strong> Choosing the physical meter as the source of truth.</li>
+<li><strong>Ready — Monitoring an Unraid UPS with NUT.</strong> Useful data even when runtime estimates are absent.</li>
+<li><strong>Ready — When the Home Assistant MCP path hangs but REST works.</strong> Selecting the dependable interface.</li>
+<li><strong>Reconstruct — Testing HAOS on bare metal.</strong> A migration story once the final production decision is recorded.</li>
+</ul>
+<p><strong>Reading path:</strong> HA architecture → power-switch safety design → BMSs → battery diagnosis → dashboard.</p>
+<h2>Frigate and cameras</h2>
+<ul>
+<li><strong>Ready — Building a low-cost Frigate camera estate with Thingino.</strong> The overall architecture and why the firmware mattered.</li>
+<li><strong>Ready — A repeatable onboarding pattern for near-identical cameras.</strong> Names, addresses, streams and verification.</li>
+<li><strong>Ready — Main streams, substreams and go2rtc aliases.</strong> A real configuration rather than an abstract diagram.</li>
+<li><strong>Ready — Adding Tapo cameras without breaking the established pattern.</strong> Fixed and PTZ variants.</li>
+<li><strong>Ready — Adding a Reolink PoE doorbell.</strong> RTSP succeeded when the recommended HTTP-FLV route did not.</li>
+<li><strong>Ready — PTZ through Frigate versus Home Assistant ONVIF.</strong> Two control paths, different uses.</li>
+<li><strong>Ready — A family-friendly Home Assistant camera dashboard.</strong> Making a complex backend usable without exposing private views.</li>
+<li><strong>Ready — When the Coral disappeared.</strong> Diagnosing detector restarts and using CPU as a temporary fallback.</li>
+<li><strong>Ready — Rotate at the camera or downstream?</strong> Why fixing the source simplified the stack.</li>
+<li><strong>Ready — What belongs in Frigate, go2rtc and Home Assistant?</strong> A clean division of responsibility.</li>
+</ul>
+<p><strong>Reading path:</strong> Thingino estate → onboarding pattern → stream architecture → detector fallback → family dashboard.</p>
+<h2>Home lab, networking and recovery</h2>
+<ul>
+<li><strong>Ready — Three OpenWRT access points behind OPNsense.</strong> A practical home network map.</li>
+<li><strong>Ready — Monitoring a Liebert UPS on Unraid.</strong> NUT, partial metrics and shutdown choices.</li>
+<li><strong>Ready — The laptop button pusher and JetKVM.</strong> Layered physical and remote recovery, with sensitive details removed.</li>
+<li><strong>Ready — A read-only NAS indexing VM with virtiofs.</strong> Safe visibility into a large Unraid filesystem.</li>
+<li><strong>Experiment — An RP2350 USB HID KVM.</strong> A lower-cost control path awaiting its next hardware phase.</li>
+<li><strong>Reconstruct — Diagnosing an isolated gaming-PC network.</strong> Useful OPNsense reasoning, only if the family context can be fully anonymised.</li>
+<li><strong>Ready — Replacing assumptions with topology.</strong> Cases where the device was healthy but the observation point was wrong.</li>
+</ul>
+<p><strong>Reading path:</strong> network map → service-specific projects → layered recovery.</p>
+<h2>Site and editorial system</h2>
+<ul>
+<li><strong>Ready — Why this is a blog/wiki hybrid rather than a conventional wiki.</strong> Chronology plus durable concepts.</li>
+<li><strong>Ready — Rendered pull-request previews on GitHub Free.</strong> Private source, public-unlisted preview and automatic cleanup.</li>
+<li><strong>Ready — Wiki-links, backlinks and topics in Eleventy.</strong> A lightweight knowledge graph without a database.</li>
+<li><strong>Ready — Link validation and static search.</strong> Keeping a growing notebook navigable.</li>
+<li><strong>Experiment — Editorial backlog as a preview-only page.</strong> This pull request is the test.</li>
+</ul>
+<h2>Public-safety rules</h2>
+<ul>
+<li>Generalise personal names and family circumstances unless they are essential and explicitly approved.</li>
+<li>Remove credentials, access tokens, serial numbers, precise private addresses and unnecessary internal IP addresses.</li>
+<li>Explain security architecture without publishing an attack recipe for the live system.</li>
+<li>Separate what was measured from what was inferred.</li>
+<li>Preserve failed approaches when they teach a reusable lesson.</li>
+<li>Link to concepts generously; do not duplicate the same explanation in every project post.</li>
+<li>For any project touching a family member’s personal device or account (for example the paused iPhone-mirroring spike), keep ownership, consent and authorisation boundaries explicit and never publish device/account identifiers.</li>
+</ul>
+<h2>Proposed hubs</h2>
+<ul>
+<li><strong>Local AI</strong> — models, runtimes, benchmarks and hardware optimisation.</li>
+<li><strong>Agent architecture</strong> — Tiggy, Hermes, delegation, permissions, memory and resilience.</li>
+<li><strong>Voice and media</strong> — live audio, speech components and local generation.</li>
+<li><strong>Home Assistant</strong> — integrations, automations, dashboards and energy data.</li>
+<li><strong>Frigate and cameras</strong> — capture, restreaming, detection, PTZ and usability.</li>
+<li><strong>Home lab</strong> — networking, Unraid, Raspberry Pi projects, recovery and observability.</li>
+<li><strong>Automation and reliability</strong> — scrapers, schedules, verification, failure handling and backups.</li>
+</ul>
+<p>Individual posts should use several precise topics while linking back to one primary hub. Hubs are evergreen maps; project notes remain chronological evidence.</p>
+</main>
+    <footer>Built from Markdown. No trackers, adverts or algorithmic nonsense.</footer>
+  </body>
+</html>
