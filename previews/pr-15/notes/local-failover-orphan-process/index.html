@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Local-model failover and the orphan-process bug · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <link rel="stylesheet" href="/previews/pr-15/assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/previews/pr-15/">Phil &amp; Tiggy&#39;s Lab Notes</a>
+      <nav aria-label="Main navigation">
+        <a href="/previews/pr-15/topics/">Topics</a>
+        <a href="/previews/pr-15/search/">Search</a>
+        <a href="/previews/pr-15/about/">About</a>
+      </nav>
+    </header>
+    <main data-pagefind-body><article class="note">
+  <h1>Local-model failover and the orphan-process bug</h1>
+  
+  <p class="eyebrow project-period">Project period · <time datetime="2026-09-12T00:00:00.000Z">September 2026</time></p>
+  <p class="standfirst">A real watchdog restart proved the fallback chain—and stranded the emergency model it had launched.</p>
+  
+    <ul class="topic-chips" aria-label="Topics">
+      <li><a href="/previews/pr-15/topics/automation/">Automation</a></li><li><a href="/previews/pr-15/topics/reliability/">Reliability</a></li><li><a href="/previews/pr-15/topics/local-ai/">Local AI</a></li><li><a href="/previews/pr-15/topics/openclaw/">OpenClaw</a></li>
+    </ul>
+  
+  <div class="prose"><h2>In brief</h2>
+<ul>
+<li>The Mac emergency model started in under 0.8 seconds and handled a simulated Ryzen outage.</li>
+<li>An external watchdog then killed and replaced the Gateway during the model’s idle window.</li>
+<li>The emergency <code>llama-server</code> became an orphan and missed its normal ten-minute shutdown.</li>
+<li>A separate reaper now requires exact identity, healthy replacement, no client and two matching observations before sending <code>TERM</code>.</li>
+<li>Recovery tests must inspect resource lifecycle, not only whether requests succeed.</li>
+</ul>
+<p>OpenClaw’s <strong>Gateway</strong> is the long-running process that owns the agent session, provider connections and supervised local-model child processes. The normal local path used a wake-on-demand Ryzen GPU server; a smaller <code>llama.cpp</code> model on the Mac mini was the emergency fallback. The failover test looked successful: the Ryzen endpoint was unavailable, the Mac model started, and a response came back. Then an external watchdog replaced the Gateway—and exposed a second failure.</p>
+<figure class="article-figure"><img src="/previews/pr-15/assets/diagrams/failover-orphan.svg" alt="A Gateway starts an emergency model, is replaced by a watchdog, and leaves the model orphaned until a conservative reaper acts" loading="lazy" decoding="async"><figcaption>The request path recovered before the process lifecycle did.</figcaption></figure>
+<h2>Proving the happy path</h2>
+<p>The emergency Qwen server had its own provider, port and 600-second idle timer. Two cold starts reached readiness in about <strong>0.76 seconds</strong>. With the Ryzen path forced to miss its three-second deadline, the Mac fallback became ready in <strong>1.27 seconds</strong> and returned HTTP 200 in <strong>1.31 seconds</strong>.</p>
+<p>The full answer still took <strong>55.7 seconds</strong> because a small model had to process the complete agent prompt. Detection was fast; degraded inference was slow. That was acceptable for emergency use.</p>
+<h2>The failure behind the success</h2>
+<p>We then paused the Gateway while its emergency child remained inside the idle window. The external watchdog replaced the Gateway, restoring service and Telegram. The old model process lost its parent and became adopted by PID 1. Its idle owner no longer existed, so the expected shutdown never arrived.</p>
+<p>Port health alone would have missed this. The new Gateway worked; the abandoned process still held memory.</p>
+<h2>Conservative cleanup for orphaned model processes</h2>
+<p>The repair runs outside the Gateway every 15 seconds. It matches the exact binary, dedicated port, model alias and model file. It proceeds only when there is exactly one listener, the replacement Gateway is healthy, that Gateway is absent from the model’s ancestry, no client is connected, and the same model/Gateway pair appears twice. It sends <code>TERM</code>, rechecks, and reserves <code>KILL</code> for the unchanged exact process.</p>
+<p>In the controlled orphan test, the model became PPID 1. The reaper observed it, confirmed it on the next pass, sent <code>TERM</code>, and saw it exit one second later. In the normal test it ignored the Gateway-owned model, which stopped on its existing idle timer. A fresh cold start then succeeded.</p>
+<h2>Result</h2>
+<p>The fallback chain, watchdog and reaper now cover three different concerns: degraded service, control-plane recovery and resource cleanup. Combining them into one optimistic health check would hide exactly the fault the exercise found.</p>
+<p>A resilience test is not finished when the reply arrives. Verify the old processes died, the scarce resources were released, and the next cold start still works.</p>
+</div>
+
+  
+    <aside class="connections resources">
+      <h2>References and resources</h2>
+      <ul>
+        
+          <li>
+            <a href="https://github.com/openclaw/openclaw/issues/112125">OpenClaw issue 112125</a>
+            <strong> · Upstream issue</strong>
+            <br><span>Tracks supervised child processes surviving an unexpected Gateway termination.</span>
+          </li>
+        
+          <li>
+            <a href="https://keith.github.io/xcode-man-pages/launchd.plist.5.html">launchd manual page</a>
+            <strong> · Platform documentation</strong>
+            <br><span>Reference for the external watchdog and reaper jobs used in the controlled test.</span>
+          </li>
+        
+      </ul>
+    </aside>
+  
+
+  
+  
+    <aside class="connections">
+      <h2>Related notes</h2>
+      <ul>
+        <li><a href="/previews/pr-15/notes/tiggys-tiered-brain/">A tiered model architecture for an OpenClaw agent</a></li><li><a href="/previews/pr-15/notes/live-voice-tiggy-iphone/">Building an iPhone voice interface for an OpenClaw agent</a></li><li><a href="/previews/pr-15/notes/midge-real-work-benchmark/">Benchmarking real assistant work instead of reasoning puzzles</a></li><li><a href="/previews/pr-15/notes/notebook-workflow/">Building an approval-gated lab notebook with GitHub Actions</a></li>
+      </ul>
+    </aside>
+  
+
+  
+  
+</article>
+</main>
+    <footer>Built from Markdown. No trackers, adverts or algorithmic nonsense.</footer>
+  </body>
+</html>

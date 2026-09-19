@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Why Moshika was the wrong voice model for an OpenClaw agent · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <link rel="stylesheet" href="/previews/pr-15/assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/previews/pr-15/">Phil &amp; Tiggy&#39;s Lab Notes</a>
+      <nav aria-label="Main navigation">
+        <a href="/previews/pr-15/topics/">Topics</a>
+        <a href="/previews/pr-15/search/">Search</a>
+        <a href="/previews/pr-15/about/">About</a>
+      </nav>
+    </header>
+    <main data-pagefind-body><article class="note">
+  <h1>Why Moshika was the wrong voice model for an OpenClaw agent</h1>
+  
+  <p class="eyebrow project-period">Project period · <time datetime="2026-09-12T00:00:00.000Z">September 2026</time></p>
+  <p class="standfirst">A 135 ms speech model proved local full duplex, but weak interruption control and the wrong text seam outweighed its speed.</p>
+  
+    <ul class="topic-chips" aria-label="Topics">
+      <li><a href="/previews/pr-15/topics/voice/">Voice</a></li><li><a href="/previews/pr-15/topics/local-ai/">Local AI</a></li><li><a href="/previews/pr-15/topics/evaluation/">Evaluation</a></li><li><a href="/previews/pr-15/topics/mlx/">Mlx</a></li>
+    </ul>
+  
+  <div class="prose"><h2>In brief</h2>
+<ul>
+<li>Moshika produced first audio in <strong>135 ms</strong> and ran faster than real time on a 16 GB M4 Mac mini.</li>
+<li>It genuinely accepted and emitted audio at the same time.</li>
+<li>In a stronger interruption test it stopped after roughly two seconds but did not answer the replacement question.</li>
+<li>Its text stream was assistant inner monologue, not a clean user transcript for steering OpenClaw.</li>
+<li>Low latency was valuable evidence, but control and integration decided the architecture.</li>
+</ul>
+<p><strong>Moshika</strong> is Kyutai’s quantised MLX implementation of the Moshi full-duplex speech model. We tested it as a possible local voice layer for Tiggy, an existing OpenClaw agent whose memory, tools and permissions needed to remain in OpenClaw. Moshika made the most convincing first impression of the voice experiments: it spoke almost immediately and treated conversation as one continuous audio stream. That still did not make it the right integration.</p>
+<figure class="article-figure"><img src="/previews/pr-15/assets/diagrams/moshika-verdict.svg" alt="A balance comparing Moshika&#39;s excellent latency and duplex mechanics with weak deterministic control and integration seams" loading="lazy" decoding="async"><figcaption>Latency won the demo; control determined the product decision.</figcaption></figure>
+<h2>What worked</h2>
+<p>The official MLX stack loaded a 4.9 GB model cache and used roughly <strong>5.4 GB</strong> of physical memory. A 20-second unpaced duplex stream completed in <strong>16.17 seconds</strong>, a real-time factor of <strong>0.81</strong>. First audio arrived after <strong>135 ms</strong> while OpenClaw’s Gateway remained healthy.</p>
+<p>The transport was genuinely duplex: 24 kHz Opus arrived while 80 ms frames of assistant audio and inner-monologue text returned over the same WebSocket. This was not the familiar record, wait, transcribe, answer sequence.</p>
+<h2>Where the demo stopped</h2>
+<p>Interruption exposed the product gap. In a stronger barge-in test, Moshika stopped its current answer around two seconds after new speech began but did not answer the replacement question. The stock server also retained state across sequential WebSocket clients until restart, complicating clean session boundaries.</p>
+<p>More importantly, the available text stream represented the assistant’s internal monologue. Tiggy needed a trustworthy transcript of what the user said, because OpenClaw—not the speech model—owns identity, memory, tools and permissions. Turning inner monologue into user instructions would be an unsafe integration seam.</p>
+<p>Other native speech models had different compromises. One promising 11B design exposed transcript and function channels, but its documented memory rose beyond this host’s 16 GB during sustained use. A smaller quantised alternative had quality warnings.</p>
+<h2>Result</h2>
+<p>Moshika remains a good on-demand laboratory and a useful latency reference. It proved that local full-duplex speech on the base Mac was feasible.</p>
+<p>It also clarified the requirement: barge-in must cancel output quickly, produce an intelligible replacement transcript and steer the existing agent deterministically. A voice that is fast but cannot hand control back cleanly is a separate character, not Tiggy’s interface.</p>
+</div>
+
+  
+    <aside class="connections resources">
+      <h2>References and resources</h2>
+      <ul>
+        
+          <li>
+            <a href="https://github.com/kyutai-labs/moshi">Moshi</a>
+            <strong> · Source repository</strong>
+            <br><span>The official full-duplex speech stack tested through its MLX implementation.</span>
+          </li>
+        
+          <li>
+            <a href="https://huggingface.co/kyutai/moshika-mlx-q4">Moshika MLX Q4</a>
+            <strong> · Model weights</strong>
+            <br><span>The quantised on-device model used on the 16 GB Mac mini.</span>
+          </li>
+        
+      </ul>
+    </aside>
+  
+
+  
+  
+    <aside class="connections">
+      <h2>Related notes</h2>
+      <ul>
+        <li><a href="/previews/pr-15/notes/midge-real-work-benchmark/">Benchmarking real assistant work instead of reasoning puzzles</a></li><li><a href="/previews/pr-15/notes/live-voice-tiggy-iphone/">Building an iPhone voice interface for an OpenClaw agent</a></li><li><a href="/previews/pr-15/notes/system-versus-model-native-duplex/">System duplex versus model-native duplex for an AI voice assistant</a></li><li><a href="/previews/pr-15/notes/can-a-local-agent-do-real-work/">Can a local AI agent harness do real work?</a></li>
+      </ul>
+    </aside>
+  
+
+  
+  
+</article>
+</main>
+    <footer>Built from Markdown. No trackers, adverts or algorithmic nonsense.</footer>
+  </body>
+</html>

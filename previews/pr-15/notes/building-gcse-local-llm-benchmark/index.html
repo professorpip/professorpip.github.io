@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Building a GCSE benchmark for local LLMs · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <link rel="stylesheet" href="/previews/pr-15/assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/previews/pr-15/">Phil &amp; Tiggy&#39;s Lab Notes</a>
+      <nav aria-label="Main navigation">
+        <a href="/previews/pr-15/topics/">Topics</a>
+        <a href="/previews/pr-15/search/">Search</a>
+        <a href="/previews/pr-15/about/">About</a>
+      </nav>
+    </header>
+    <main data-pagefind-body><article class="note">
+  <h1>Building a GCSE benchmark for local LLMs</h1>
+  
+  <p class="eyebrow project-period">Project period · <time datetime="2026-09-01T00:00:00.000Z">August–September 2026</time></p>
+  <p class="standfirst">How a suspiciously brilliant 84-mark pilot became an auditable 1,019-mark test of local models, vision and exam technique.</p>
+  
+    <ul class="topic-chips" aria-label="Topics">
+      <li><a href="/previews/pr-15/topics/local-ai/">Local AI</a></li><li><a href="/previews/pr-15/topics/benchmarking/">Benchmarking</a></li><li><a href="/previews/pr-15/topics/evaluation/">Evaluation</a></li><li><a href="/previews/pr-15/topics/ryzen/">Ryzen</a></li>
+    </ul>
+  
+  <div class="prose"><h2>In brief</h2>
+<ul>
+<li>We built a GCSE-based benchmark to test quantised local models on a stable, mixed workload—not to award pretend grades.</li>
+<li>A 97.6% pilot was misleading because it selected text-friendly questions.</li>
+<li>Text-only testing scored <strong>313/361 (86.7%)</strong> but covered only 72.5% of available marks; vision raised coverage to 100% with common-question performance unchanged.</li>
+<li>The frozen expanded baseline scored <strong>893/1,019 (87.6%)</strong> across 14 components; Maths, fine visual reading and exam technique exposed the clearest weaknesses.</li>
+<li>Flash Next led the text-only comparison at <strong>340/361</strong>, but speed and agent reliability remained separate deployment decisions.</li>
+</ul>
+<p>Short prompts made several local models look clever. We wanted to know whether a quantised model on a 16 GB consumer GPU could sustain useful reasoning across official British GCSE questions.</p>
+<p>This is an <a href="/previews/pr-15/topics/evaluation/" class="wiki-link">evaluation</a> benchmark, not a claim that an AI “passed its GCSEs”. Components were partial, some marks subjective, public papers may have appeared in training data, and speaking or practical assessment was absent.</p>
+<blockquote>
+<p><strong>Test platform, August–September 2026:</strong> AMD Ryzen 9 3950X, 64 GB system RAM and an NVIDIA GeForce RTX 5060 Ti with 16 GB VRAM. The same local endpoint and frozen question route were used within each controlled comparison; model quant, context and vision/runtime changes were recorded separately rather than treated as interchangeable.</p>
+</blockquote>
+<figure class="article-figure"><img src="/previews/pr-15/assets/diagrams/gcse-benchmark-evolution.svg" alt="Timeline showing the benchmark growing from an 84-mark text-friendly pilot through text-only, multimodal and exam-permitted-aid versions to a frozen 1,019-mark baseline" loading="lazy" decoding="async"><figcaption>The score barely moved after vision arrived; coverage and experimental discipline changed dramatically.</figcaption></figure>
+<h2>From flattering pilot to useful test</h2>
+<p>The first Dirk/Qwen3.8 27B run scored <strong>82/84 (97.6%)</strong> on selected Maths, Biology and Computer Science questions. It mainly proved the harness. Questions had been chosen because text extraction worked, excluding much of the visual and awkward material. A high score was evidence that the test was too friendly.</p>
+<p>We kept the useful method: isolate mark schemes from the answering model, prompt neutrally, freeze raw answers before marking, mark conservatively and retain prompts, decisions and hashes.</p>
+<h2>The versions</h2>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Coverage and score</th>
+<th>What changed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Text only</td>
+<td><strong>313/361 (86.7%)</strong>; 361/498 marks accessible</td>
+<td>Six AQA components, no tools, calculator, retrieval or answer checking</td>
+</tr>
+<tr>
+<td>Native vision</td>
+<td><strong>436/498 (87.6%)</strong>; full coverage</td>
+<td>Visual questions routed through the model’s vision path</td>
+</tr>
+<tr>
+<td>Exam-permitted aids</td>
+<td><strong>437/498 (87.8%)</strong></td>
+<td>Only supplied formula material and allowed calculators</td>
+</tr>
+<tr>
+<td>Expanded frozen baseline</td>
+<td><strong>893/1,019 (87.6%)</strong></td>
+<td>14 subject/component entries with exclusions recorded</td>
+</tr>
+</tbody>
+</table>
+<p>The controlled vision comparison mattered most. The same common text questions scored <strong>313/361</strong> in both versions; newly accessible visual questions scored <strong>123/137</strong>. Vision expanded access rather than making the model generally cleverer.</p>
+<p>Structured diagrams, logic circuits and ordinary graphs worked well. Fine measurements such as burette scales did not. Higher non-calculator Maths, source-specific humanities answers and exam command words exposed other weaknesses. The harness had limits too: PPM images were stable where PNG could crash the vision CLI, and the text server had to release GPU memory before vision loaded.</p>
+<p>Permitted aids added only one mark. Presenting the paper properly mattered far more than adding tools.</p>
+<h2>Comparing local models</h2>
+<p>The frozen 361-mark text route then compared six profiles:</p>
+<table>
+<thead>
+<tr>
+<th>Model profile</th>
+<th style="text-align:right">Score</th>
+<th>Practical reading</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Flash Next IQ3</td>
+<td style="text-align:right">340/361 (94.2%)</td>
+<td>Best academic result; slowest</td>
+</tr>
+<tr>
+<td>Qwen3.8 27B IQ4 + MTP</td>
+<td style="text-align:right">323/361 (89.5%)</td>
+<td>Strong, faster all-rounder</td>
+</tr>
+<tr>
+<td>Dirk/Qwen3.8 27B</td>
+<td style="text-align:right">313/361 (86.7%)</td>
+<td>Reference model; stronger broader agent behaviour</td>
+</tr>
+<tr>
+<td>Base Qwen3.8 27B</td>
+<td style="text-align:right">312/361 (86.4%)</td>
+<td>Nearly identical academic score</td>
+</tr>
+<tr>
+<td>Qwen3-Coder 30B</td>
+<td style="text-align:right">265/361 (73.4%)</td>
+<td>Fast; coding specialisation did not transfer</td>
+</tr>
+<tr>
+<td>Gemma 4 12B</td>
+<td style="text-align:right">227/361 (62.9%)</td>
+<td>Long-prompt failures became obvious</td>
+</tr>
+</tbody>
+</table>
+<p>Flash Next took about <strong>13.9 minutes</strong> and generated near <strong>23 tokens/s</strong>; faster 27B profiles were roughly twice that rate. Academic capability therefore became one axis alongside agent reliability, speed and operational complexity in our <a href="/previews/pr-15/topics/local-ai/" class="wiki-link">local AI</a> choices.</p>
+<h2>Rules worth keeping</h2>
+<ul>
+<li>Freeze raw responses before opening the mark scheme; never rescue and silently re-score an answer.</li>
+<li>Record every excluded question, mark value and reason.</li>
+<li>Report capability and coverage separately.</li>
+<li>Mark subjective answers with visible uncertainty or independent review.</li>
+<li>Preserve runtime failures and awkward questions as evidence.</li>
+<li>Do not convert benchmark percentages into theatrical school grades.</li>
+</ul>
+<p>The result is a repeatable challenge for the next exciting model. We no longer have to ask whether it feels clever; we can give it the same exam.</p>
+</div>
+
+  
+    <aside class="connections resources">
+      <h2>References and resources</h2>
+      <ul>
+        
+          <li>
+            <a href="https://www.aqa.org.uk/find-past-papers-and-mark-schemes">AQA past papers and mark schemes</a>
+            <strong> · Official exam resources</strong>
+            <br><span>Source route for the AQA papers and marking material used to construct most of the benchmark.</span>
+          </li>
+        
+          <li>
+            <a href="https://www.ocr.org.uk/qualifications/past-paper-finder/">OCR past-paper finder</a>
+            <strong> · Official exam resources</strong>
+            <br><span>Source route for the OCR English Language component used in the expanded baseline.</span>
+          </li>
+        
+          <li>
+            <a href="https://github.com/ggml-org/llama.cpp">llama.cpp</a>
+            <strong> · Runtime</strong>
+            <br><span>The local inference runtime used for the core text and multimodal experiments.</span>
+          </li>
+        
+          <li>
+            <a href="https://huggingface.co/peculiar-ragdoll/Dirk-Qwen3.8-27B-GGUF">Dirk-Qwen3.8-27B GGUF</a>
+            <strong> · Model weights</strong>
+            <br><span>Model repository for the pilot and frozen expanded baseline, including its vision projector.</span>
+          </li>
+        
+          <li>
+            <a href="https://huggingface.co/Bucoid/Qwen3.8-27B-IQ4-XS-MTP-16GB-VRAM-GGUF">Qwen3.8 27B IQ4_XS with MTP</a>
+            <strong> · Model weights</strong>
+            <br><span>The 16 GB-oriented Qwen profile used in the text-only comparison.</span>
+          </li>
+        
+          <li>
+            <a href="https://huggingface.co/unsloth/Qwen3.8-27B-GGUF">Base Qwen3.8-27B GGUF</a>
+            <strong> · Model weights</strong>
+            <br><span>Comparator used to separate general model capability from Dirk-specific behaviour.</span>
+          </li>
+        
+          <li>
+            <a href="https://huggingface.co/lmstudio-community/Qwen3-Coder-30B-A3B-Instruct-GGUF">Qwen3-Coder-30B-A3B Instruct GGUF</a>
+            <strong> · Model weights</strong>
+            <br><span>The coding-specialised comparator.</span>
+          </li>
+        
+          <li>
+            <a href="https://huggingface.co/lmstudio-community/gemma-4-12B-it-QAT-GGUF">Gemma 4 12B QAT GGUF</a>
+            <strong> · Model weights</strong>
+            <br><span>The smaller fallback model whose long-prompt failures became clear in the benchmark.</span>
+          </li>
+        
+          <li>
+            <a href="https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF">Qwen3.8 Flash Next GGUF</a>
+            <strong> · Model weights</strong>
+            <br><span>Source for the IQ3 profile with the strongest text-only result.</span>
+          </li>
+        
+          <li>
+            <a href="https://github.com/thecodacus/llama.cpp">Codacus llama.cpp performance fork</a>
+            <strong> · Runtime source</strong>
+            <br><span>Runtime family used for the Flash Next expert-cache experiment.</span>
+          </li>
+        
+          <li>
+            <a href="https://www.youtube.com/watch?v=IH8XmxiwliQ">Is Frontier Class Local AI Finally Practical?</a>
+            <strong> · Video</strong>
+            <br><span>The experiment that prompted our Flash Next configuration and follow-up run.</span>
+          </li>
+        
+      </ul>
+    </aside>
+  
+
+  
+  
+    <aside class="connections">
+      <h2>Related notes</h2>
+      <ul>
+        <li><a href="/previews/pr-15/notes/windows-versus-ubuntu-llama-cpp/">Windows versus Ubuntu for local LLM inference on the same PC</a></li><li><a href="/previews/pr-15/notes/16gb-vram-local-model-shootout/">The 16 GB VRAM local-model shootout</a></li><li><a href="/previews/pr-15/notes/midge-real-work-benchmark/">Benchmarking real assistant work instead of reasoning puzzles</a></li><li><a href="/previews/pr-15/notes/why-moshika-was-wrong-for-tiggy/">Why Moshika was the wrong voice model for an OpenClaw agent</a></li>
+      </ul>
+    </aside>
+  
+
+  
+  
+</article>
+</main>
+    <footer>Built from Markdown. No trackers, adverts or algorithmic nonsense.</footer>
+  </body>
+</html>
