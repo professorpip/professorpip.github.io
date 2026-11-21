@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">Sonoff Basic migration and second lives</title>
+  <desc id="desc">Two old Sonoff Basics were backed up, upgraded through six Tasmota stages, migrated to a compact ESPHome image and adopted by Home Assistant before taking separate fan-control and guarded server-recovery roles.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 10 5 0 10z" fill="#69746d"/></marker>
+    <style>
+      .bg{fill:#f5f2ea}.edge{fill:none;stroke:#69746d;stroke-width:4;marker-end:url(#arrow)}.split{fill:none;stroke:#69746d;stroke-width:4}.node{stroke:#69746d;stroke-width:2}.input{fill:#f5c7b0}.process{fill:#d8e3d8}.result{fill:#f2b58f}.label{fill:#17211b;font:700 24px system-ui,sans-serif;text-anchor:middle}.small{fill:#536059;font:19px system-ui,sans-serif;text-anchor:middle}.title{fill:#17211b;font:800 34px system-ui,sans-serif}.note{fill:#536059;font:20px system-ui,sans-serif;text-anchor:middle}.warning{fill:#8a3d1d;font:700 19px system-ui,sans-serif;text-anchor:middle}
+      @media(prefers-color-scheme:dark){.bg{fill:#19211c}.input{fill:#74432e}.process{fill:#344a3a}.result{fill:#914625}.label,.title{fill:#eef2eb}.small,.note{fill:#b7c1ba}.warning{fill:#ff9b6d}.node,.edge,.split{stroke:#9eaaa2}}
+    </style>
+  </defs>
+  <rect class="bg" width="1200" height="720" rx="24"/>
+  <text class="title" x="60" y="65">One migration route, two different safety postures</text>
+
+  <path class="edge" d="M260 220H310"/><path class="edge" d="M570 220H620"/><path class="edge" d="M880 220H930"/>
+  <rect class="node input" x="50" y="140" width="210" height="160" rx="20"/>
+  <text class="label" x="155" y="177">Inventory</text><text class="label" x="155" y="205">+ backup</text><text class="small" x="155" y="240">Tasmota 6.2.1.11</text><text class="small" x="155" y="267">1 MB flash</text><text class="warning" x="155" y="294">shared MQTT topic</text>
+
+  <rect class="node process" x="310" y="120" width="260" height="200" rx="20"/>
+  <text class="label" x="440" y="165">Staged Tasmota</text><text class="small" x="440" y="202">6.7.1 → 7.2 minimal</text><text class="small" x="440" y="232">7.2 lite → 8.5.1 lite</text><text class="small" x="440" y="262">9.1 lite.gz → 15.4 lite</text><text class="small" x="440" y="292">verify every restart</text>
+
+  <rect class="node process" x="620" y="140" width="260" height="160" rx="20"/>
+  <text class="label" x="750" y="187">Compact ESPHome</text><text class="small" x="750" y="228">338 KB candidate</text><text class="small" x="750" y="258">GPIO1 logger disabled</text>
+
+  <rect class="node process" x="930" y="140" width="220" height="160" rx="20"/>
+  <text class="label" x="1040" y="187">Home Assistant</text><text class="small" x="1040" y="228">relay + button</text><text class="small" x="1040" y="258">temp + humidity</text>
+
+  <path class="split" d="M1040 300V385"/><path class="edge" d="M1040 385H695V438"/><path class="edge" d="M1040 385V438"/>
+
+  <rect class="node result" x="560" y="438" width="270" height="160" rx="20"/>
+  <text class="label" x="695" y="484">Garden-room fan</text><text class="small" x="695" y="524">on &gt; 26 °C · off &lt; 25 °C</text><text class="small" x="695" y="554">RESTORE_DEFAULT_OFF</text><text class="small" x="695" y="582">logged hysteresis</text>
+
+  <rect class="node result" x="880" y="438" width="270" height="160" rx="20"/>
+  <text class="label" x="1015" y="484">Server recovery</text><text class="small" x="1015" y="524">last resort only</text><text class="small" x="1015" y="554">ALWAYS_ON</text><text class="small" x="1015" y="582">confirmation guarded</text>
+
+  <text class="note" x="280" y="477">Same hardware</text><text class="note" x="280" y="510">Different failure modes</text>
+  <text class="note" x="280" y="559">Restore behaviour belongs</text><text class="note" x="280" y="592">to the job, not the board.</text>
+</svg>

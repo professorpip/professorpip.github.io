@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" role="img" aria-labelledby="title desc">
+  <title id="title">Live voice Tiggy pipeline</title>
+  <desc id="desc">Speech travels from an iPhone through WebRTC, voice detection, Nemotron transcription and OpenClaw, then returns through sentence streaming and Kokoro speech synthesis.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#69746d"/></marker>
+    <style>
+      .bg{fill:#f5f2ea}.edge{fill:none;stroke:#69746d;stroke-width:4;marker-end:url(#arrow)}.node{stroke:#69746d;stroke-width:2}.input{fill:#f6d2bd}.process{fill:#d8e3d8}.brain{fill:#f2b58f}.label{fill:#17211b;font:700 25px system-ui,sans-serif;text-anchor:middle}.small{fill:#536059;font:20px system-ui,sans-serif;text-anchor:middle}.title{fill:#17211b;font:800 34px system-ui,sans-serif}.lane{fill:#536059;font:700 20px system-ui,sans-serif;letter-spacing:2px}.return{stroke-dasharray:8 8}
+      @media(prefers-color-scheme:dark){.bg{fill:#19211c}.input{fill:#7a422b}.process{fill:#344a3a}.brain{fill:#914625}.label,.title{fill:#eef2eb}.small,.lane{fill:#b7c1ba}.node,.edge{stroke:#9eaaa2}}
+    </style>
+  </defs>
+  <rect class="bg" width="1200" height="560" rx="24"/>
+  <text class="title" x="64" y="66">A voice interface, not a replacement brain</text>
+  <text class="lane" x="64" y="126">LISTEN</text>
+  <path class="edge" d="M226 190H302"/><path class="edge" d="M478 190H554"/><path class="edge" d="M730 190H806"/>
+  <rect class="node input" x="64" y="140" width="162" height="100" rx="18"/><text class="label" x="145" y="182">iPhone</text><text class="small" x="145" y="215">microphone</text>
+  <rect class="node process" x="302" y="140" width="176" height="100" rx="18"/><text class="label" x="390" y="182">WebRTC</text><text class="small" x="390" y="215">VAD + AEC</text>
+  <rect class="node process" x="554" y="140" width="176" height="100" rx="18"/><text class="label" x="642" y="182">Nemotron</text><text class="small" x="642" y="215">local ASR</text>
+  <rect class="node brain" x="806" y="140" width="330" height="100" rx="18"/><text class="label" x="971" y="182">OpenClaw / Tiggy</text><text class="small" x="971" y="215">context, reasoning and tools</text>
+  <text class="lane" x="64" y="342">SPEAK</text>
+  <path class="edge return" d="M806 408H730"/><path class="edge return" d="M554 408H478"/><path class="edge return" d="M302 408H226"/>
+  <rect class="node brain" x="806" y="358" width="330" height="100" rx="18"/><text class="label" x="971" y="400">Stable sentences</text><text class="small" x="971" y="433">streamed as they arrive</text>
+  <rect class="node process" x="554" y="358" width="176" height="100" rx="18"/><text class="label" x="642" y="400">Kokoro</text><text class="small" x="642" y="433">local TTS</text>
+  <rect class="node process" x="302" y="358" width="176" height="100" rx="18"/><text class="label" x="390" y="400">WebRTC</text><text class="small" x="390" y="433">reply audio</text>
+  <rect class="node input" x="64" y="358" width="162" height="100" rx="18"/><text class="label" x="145" y="400">iPhone</text><text class="small" x="145" y="433">speaker</text>
+  <path class="edge return" d="M1100 240V314H971V358"/>
+</svg>

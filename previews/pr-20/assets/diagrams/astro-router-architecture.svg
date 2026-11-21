@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">Astro Slide OpenWrt router architecture</title>
+  <desc id="desc">A client connects over Wi-Fi to Android's existing access-point interface. VirtualAP bridges it into OpenWrt, which provides DHCP, DNS and firewall services and sends traffic through Android's cellular interface to LTE.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#62748a"/>
+    </marker>
+    <style>
+      .bg{fill:#f7f5ef}.host{fill:#fff;stroke:#25364d;stroke-width:3}.box{fill:#eef5f5;stroke:#32636b;stroke-width:2}.openwrt{fill:#fff3df;stroke:#9a5a17;stroke-width:2}.external{fill:#edf0ff;stroke:#4a5ca8;stroke-width:2}.line{fill:none;stroke:#62748a;stroke-width:4;marker-end:url(#arrow)}.dash{fill:none;stroke:#7b8797;stroke-width:2;stroke-dasharray:8 8}.title{font:700 30px system-ui,sans-serif;fill:#1c2a3a}.label{font:700 21px system-ui,sans-serif;fill:#223247}.small{font:16px system-ui,sans-serif;fill:#43546a}.tiny{font:14px system-ui,sans-serif;fill:#53657a}.tag{font:700 14px system-ui,sans-serif;fill:#32636b;letter-spacing:1px}.note{font:15px system-ui,sans-serif;fill:#6c4519}.step{fill:#25364d}.steptext{font:700 15px system-ui,sans-serif;fill:#fff;text-anchor:middle;dominant-baseline:middle}
+    </style>
+  </defs>
+  <rect class="bg" width="1200" height="720"/>
+  <text class="title" x="60" y="58">Astro Slide as a pocket OpenWrt LTE router</text>
+  <text class="small" x="60" y="88">Android keeps the hardware drivers; OpenWrt owns the client network.</text>
+
+  <!-- Connectors are drawn before nodes so they remain behind the boxes. -->
+  <path class="line" d="M245 355 H348"/>
+  <path class="line" d="M520 355 H650"/>
+  <path class="line" d="M940 355 H1035"/>
+  <path class="dash" d="M435 282 V220 H800 V282"/>
+  <path class="dash" d="M800 465 V526 H435 V465"/>
+
+  <rect class="external" x="60" y="285" width="185" height="140" rx="18"/>
+  <circle class="step" cx="88" cy="312" r="16"/><text class="steptext" x="88" y="313">1</text>
+  <text class="label" x="90" y="355">Wi-Fi client</text>
+  <text class="small" x="90" y="387">Phone or laptop</text>
+
+  <rect class="host" x="330" y="125" width="630" height="450" rx="28"/>
+  <text class="tag" x="365" y="166">ASTRO SLIDE / ANDROID HOST</text>
+  <text class="tiny" x="365" y="193">Custom 4.14.186 kernel: IPC namespaces available to Droidspaces</text>
+
+  <rect class="box" x="365" y="282" width="155" height="173" rx="16"/>
+  <circle class="step" cx="393" cy="310" r="16"/><text class="steptext" x="393" y="311">2</text>
+  <text class="label" x="390" y="350">VirtualAP</text>
+  <text class="small" x="390" y="382">hostapd</text>
+  <text class="small" x="390" y="407">borrows idle</text>
+  <text class="small" x="390" y="432">Android ap0</text>
+
+  <rect class="openwrt" x="650" y="255" width="290" height="210" rx="16"/>
+  <circle class="step" cx="678" cy="283" r="16"/><text class="steptext" x="678" y="284">3</text>
+  <text class="label" x="690" y="325">Droidspaces / OpenWrt</text>
+  <text class="small" x="690" y="360">vaplan0 · 192.168.42.1/24</text>
+  <text class="small" x="690" y="392">DHCP · DNS · firewall</text>
+  <text class="small" x="690" y="424">WAN pinned to cellular</text>
+
+  <rect class="external" x="1035" y="285" width="120" height="140" rx="18"/>
+  <circle class="step" cx="1063" cy="312" r="16"/><text class="steptext" x="1063" y="313">4</text>
+  <text class="label" x="1060" y="355">LTE</text>
+  <text class="small" x="1060" y="387">Internet</text>
+
+  <text class="tiny" x="272" y="338">WPA2</text>
+  <text class="tiny" x="548" y="338">vap-br0</text>
+  <text class="tiny" x="970" y="338">ccmni0</text>
+
+  <rect x="365" y="606" width="590" height="64" rx="14" fill="#fff" stroke="#c8c2b7" stroke-width="2"/>
+  <text class="note" x="395" y="633">Ownership rule: Start may borrow a framework-created, down AP interface.</text>
+  <text class="note" x="395" y="657">Stop detaches and downs it, but never deletes Android's interface.</text>
+</svg>
