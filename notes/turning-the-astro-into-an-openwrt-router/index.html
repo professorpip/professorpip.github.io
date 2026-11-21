@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Practical experiments in home infrastructure, local AI, automation and assorted technical rabbit holes.">
+    
+    <title>Turning an Astro Slide into a pocket OpenWrt LTE router · Phil &amp; Tiggy&#39;s Lab Notes</title>
+    <link rel="stylesheet" href="/assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/">Phil &amp; Tiggy&#39;s Lab Notes</a>
+      <nav aria-label="Main navigation">
+        <a href="/topics/">Topics</a>
+        <a href="/search/">Search</a>
+        <a href="/about/">About</a>
+      </nav>
+    </header>
+    <main data-pagefind-body><article class="note">
+  <h1>Turning an Astro Slide into a pocket OpenWrt LTE router</h1>
+  
+  <p class="eyebrow project-period">Project period · <time datetime="2026-11-20T00:00:00.000Z">20–21 November 2026</time></p>
+  <p class="standfirst">Droidspaces supplied OpenWrt, Android supplied the radio, and a small ownership-aware VirtualAP change joined them safely.</p>
+  
+    <ul class="topic-chips" aria-label="Topics">
+      <li><a href="/topics/openwrt/">Openwrt</a></li><li><a href="/topics/networking/">Networking</a></li><li><a href="/topics/android/">Android</a></li><li><a href="/topics/wifi/">Wifi</a></li>
+    </ul>
+  
+  <div class="prose"><h2>In brief</h2>
+<ul>
+<li>Droidspaces 7.2.0 booted OpenWrt 24.10.7 with NAT, DNS and lifecycle tests passing under SELinux enforcing.</li>
+<li>OpenWrt’s upstream was pinned to Android’s cellular interface so home Wi-Fi could stay enabled without becoming the WAN.</li>
+<li>VirtualAP failed when it tried to delete Android’s idle <code>ap0</code> and create a replacement on the MediaTek driver.</li>
+<li>A generic patch borrowed only an existing, down, nl80211 AP interface and returned it intact on Stop.</li>
+<li>An iPhone received an OpenWrt lease, reached the internet over LTE and opened LuCI; repeated saved-profile start/stop cycles preserved Android Wi-Fi.</li>
+</ul>
+<figure class="article-figure"><img src="/assets/diagrams/astro-router-architecture.svg" alt="A client joins Android&#39;s AP interface, crosses a VirtualAP bridge into OpenWrt, then exits over the cellular interface" loading="lazy" decoding="async"><figcaption>The final architecture respects component ownership: Android keeps the hardware interfaces while OpenWrt owns the client LAN.</figcaption></figure>
+<h2>Start with a disposable container</h2>
+<p>Once the custom kernel passed Droidspaces’ mandatory checks, we created a deliberately boring OpenWrt smoke test. It used the official OpenWrt 24.10 Minimal AArch64 root filesystem, verified against its published SHA-256, with IPv4 NAT enabled and autostart disabled.</p>
+<p>OpenWrt 24.10.7 and <code>procd</code> booted under SELinux enforcing. The container acquired an address, default route and DNS, then reached the internet with zero packet loss.</p>
+<p>Stop, clean start and restart all passed.</p>
+<p>Even this simple gate caught a harness mistake. Droidspaces reported <code>total: 1</code>, which meant one installed container, while <code>running: []</code> meant none were running. A classifier initially treated the installed count as live state.</p>
+<p>The raw JSON prevented a correct system result from being rewritten to fit a bad assertion.</p>
+<h2>Keep Wi-Fi and WAN separate</h2>
+<p>The finished router needed Android Wi-Fi enabled because the MediaTek framework created the AP interface only after its radio stack had initialised. But the router also had to use LTE, not the home Wi-Fi connection, as its upstream.</p>
+<p>We pinned the Droidspaces upstream to the observed cellular interface, <code>ccmni0</code>, and disabled IPv6 for this first accepted profile. OpenWrt’s managed LAN used <code>192.168.42.1/24</code>, with OpenWrt providing DHCP, DNS, firewalling and LuCI.</p>
+<p>That left one missing link: hostapd needed a usable AP interface.</p>
+<h2>The interface that existed but could not be replaced</h2>
+<p>VirtualAP 3.0.0 normally removes a stale <code>ap0</code> and asks nl80211 to create a new one. On the Astro, the direct create path failed with <code>-EFAULT</code> when Wi-Fi was off. With Wi-Fi on, Android had already created an idle AP interface.</p>
+<p>VirtualAP deleted it, and replacement creation failed with <code>-ENOMEM</code>.</p>
+<p>Those errno labels did not mean the handset was out of memory. They described a driver-interface rejection. Android could recreate the interface when its own Wi-Fi framework recovered; VirtualAP could not make an equivalent replacement.</p>
+<p>The compatibility strategy was therefore to respect Android’s ownership. The engine now borrows the existing interface only when runtime inspection proves that it exists, is nl80211 type AP and is administratively down. It fails closed for an active interface, the wrong type or an inspection failure.</p>
+<p>Borrowing writes an ownership marker. Stop detaches the interface from the bridge, flushes VirtualAP’s addresses, brings it down and leaves it present for Android. Devices without an existing interface retain the original create/delete path.</p>
+<p>Host tests covered wrong-type rejection, active-interface rejection, atomic marker creation and release without deletion. The full Linux suite passed, followed by a warning-clean static arm64 build.</p>
+<h2>The real-client gate</h2>
+<p>On the Astro, the patched engine borrowed the same <code>ap0</code> interface, started hostapd on 2.4 GHz with WPA2, and bridged it through <code>vap-br0</code> to OpenWrt’s <code>vaplan0</code>.</p>
+<p>An iPhone joined the test SSID, received a <code>192.168.42.x</code> lease, browsed the internet over LTE and opened LuCI at <code>192.168.42.1</code>. Hostapd association, VirtualAP status and OpenWrt’s lease source all recorded one client.</p>
+<p>The final acceptance ran two complete saved-profile start/stop cycles, with an extra idempotent Stop in each cycle. The framework-owned AP interface retained the same identity, OpenWrt stopped cleanly, Android Wi-Fi remained healthy and autostart stayed disabled.</p>
+<h2>Result</h2>
+<p>The project ended with a manually operated pocket router, not an unattended appliance. It proved the difficult path: rooted Android, ABI-compatible custom kernel, Droidspaces, OpenWrt, a real Wi-Fi client and LTE egress.</p>
+<p>The architecture works because each layer keeps the job it is good at. Android retains proprietary hardware support. OpenWrt owns the client network.</p>
+<p>VirtualAP provides the narrow bridge between them without pretending it owns Android’s radio interface.</p>
+<p>Longer travel soaks, reboot recovery, screen-off behaviour, thermal testing and cellular failover remain separate experiments. The integration repository publishes source patches, reproducible checks and sanitised evidence—not firmware, boot images, credentials or privileged binaries.</p>
+</div>
+
+  
+    <aside class="connections resources">
+      <h2>References and resources</h2>
+      <ul>
+        
+          <li>
+            <a href="https://github.com/ravindu644/Droidspaces-OSS">Droidspaces</a>
+            <strong> · Upstream project</strong>
+            <br><span>The Android container runtime used to host OpenWrt.</span>
+          </li>
+        
+          <li>
+            <a href="https://github.com/ravindu644/VirtualAP">VirtualAP</a>
+            <strong> · Upstream project</strong>
+            <br><span>The hostapd and bridge integration adapted for the MediaTek AP interface.</span>
+          </li>
+        
+          <li>
+            <a href="https://openwrt.org/">OpenWrt</a>
+            <strong> · Upstream project</strong>
+            <br><span>The routing, DHCP, DNS and firewall system used inside the container.</span>
+          </li>
+        
+          <li>
+            <a href="https://wireless.docs.kernel.org/en/latest/en/users/documentation/iw.html">Linux wireless interface types</a>
+            <strong> · Kernel documentation</strong>
+            <br><span>Background for nl80211 interface creation and AP mode.</span>
+          </li>
+        
+      </ul>
+    </aside>
+  
+
+  
+  
+    <aside class="connections">
+      <h2>Related notes</h2>
+      <ul>
+        <li><a href="/notes/building-the-kernel-droidspaces-needed/">Building the kernel Droidspaces actually needed</a></li><li><a href="/notes/rooting-astro-slide-with-a-recovery-path/">Rooting an Astro Slide without losing the recovery path</a></li><li><a href="/notes/moving-zha-remote-coordinator/">Moving ZHA to a remote coordinator</a></li><li><a href="/notes/living-lan-inventory/">Building a living LAN inventory without aggressive scanning</a></li>
+      </ul>
+    </aside>
+  
+
+  
+  
+</article>
+</main>
+    <footer>Built from Markdown. No trackers, adverts or algorithmic nonsense.</footer>
+  </body>
+</html>
